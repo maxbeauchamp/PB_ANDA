@@ -7,7 +7,7 @@ __version__ = "2.0"
 __date__ = "2017-08-01"
 __email__ = "phi.huynhviet@telecom-bretagne.eu"
 
-from .AnDA_stat_functions import mk_stochastic, sample_discrete, AnDA_RMSE, AnDA_correlate
+from pb_anda import *
 
 def AnDA_analog_forecasting(x, in_x, AF):
     """ Apply the analog method on catalog of historical data to generate forecasts. """

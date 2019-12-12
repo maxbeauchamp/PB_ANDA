@@ -27,9 +27,11 @@ PR_ssh.lag           = 1	# lag of time series: t -> t+lag
 PR_ssh.G_PCA         = 20	# N_eof for global PCA
 
 # Input dataset
-PR_ssh.path_X 		= './ssh.nc'		# Directory of ssh data
-PR_ssh.path_OI 		= './OI.nc'		# Directory of OI product 
-PR_ssh.path_mask 	= './metop_mask.nc'	# Directory of observation Mask
+PR_ssh.var		= "ssh_mod"					 # Variable to assimilate
+PR_ssh.path_X 		= datapath+'/data/dataset_nadir_swot.nc'	 # Directory of ssh data
+PR_ssh.path_mod 	= datapath+'/maps/NATL60-CJM165_sst_y2013.1y.nc' # Directory of ssh NATL60 maps
+PR_ssh.path_OI 		= datapath+'/oi/ssh_NATL60_swot_4nadir.nc'	 # Directory of OI product 
+#PR_ssh.path_mask 	= './metop_mask.nc'				 # Directory of observation Mask
 
 # Dataset automatically created during execution
 PR_ssh.path_X_lr 		= './ssh_lr.nc'

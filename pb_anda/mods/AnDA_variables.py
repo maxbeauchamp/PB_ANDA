@@ -1,3 +1,5 @@
+from pb_anda import *
+
 ###### Parameters setting for SST ###########################
 class PR:
     flag_scale = []  # True: multi scale
@@ -11,6 +13,8 @@ class PR:
     G_PCA = [] # N_eof for global PCA
     # Input dataset
     path_X = [] # dir of dataset X ( SST or SLA )
+    path_mod = [] # dir of dataset Model ( SST or SLA )
+    var = [] # variable to select in dataset X and OI products
     path_OI = [] # dir of OI product of test years 
     path_mask = [] # dir of observation mask
     # Dataset automatically created during execution

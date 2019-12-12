@@ -7,7 +7,7 @@ __version__ = "2.0"
 __date__ = "2017-08-01"
 __email__ = "phi.huynhviet@telecom-bretagne.eu"
 
-from .AnDA_stat_functions import resampleMultinomial, inv_using_SVD, inv_using_Woodbury
+from pb_anda import *
 
 def AnDA_data_assimilation(yo, DA):
     """ Apply stochastic and sequential data assimilation technics using model forecasting or analog forecasting. """

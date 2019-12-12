@@ -7,7 +7,7 @@ __version__ = "2.0"
 __date__ = "2017-08-01"
 __email__ = "phi.huynhviet@telecom-bretagne.eu"
 
-import numpy as np
+from pb_anda import *
     
 def AnDA_RMSE(a,b):
     """ Compute the Root Mean Square Error between 2 n-dimensional vectors. """

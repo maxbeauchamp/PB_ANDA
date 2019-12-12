@@ -7,7 +7,7 @@ __version__ = "1.0"
 __date__ = "2017-08-01"
 __email__ = "phi.huynhviet@telecom-bretagne.eu"
 
-from .AnDA_variables import VAR
+from pb_anda import *
 
 def LR_perform(HR, path_LR, N_eof): 
     """ Perform global PCA retrieving LR product """   
@@ -34,7 +34,7 @@ def LR_perform(HR, path_LR, N_eof):
             fid.close()
     else:
         file_tmp = netCDF4.Dataset(path_LR,'r')
-        lr = file_tmp.variables.items()[0][1][:]
+        lr = file_tmp.variables['lr'][:]
         file_tmp.close()         
     return lr
     
@@ -66,7 +66,7 @@ def Patch_define(sample, path_indices, path_neighbor_indices, patch_r, patch_c):
                 for k in range(c_test-3*5,c_test+3*5+1,5):
                     if (j>=0) & (k>=0) & (j<=(sample.shape[0]-patch_r)) & (k<=(sample.shape[1]-patch_c) ):
                         if (np.sum(np.isnan(sample[j:j+patch_r,k:k+patch_c]))==0):
-                            pair_tmp.append(index_patch.keys()[index_patch.values().index([j,k])])
+                            pair_tmp.append(list(index_patch.keys())[list(index_patch.values()).index([j,k])])
             neighbor_patches[i] = pair_tmp
         with open(path_neighbor_indices, 'wb') as handle:
             pickle.dump(neighbor_patches, handle, protocol=pickle.HIGHEST_PROTOCOL)            
@@ -75,6 +75,8 @@ def Patch_define(sample, path_indices, path_neighbor_indices, patch_r, patch_c):
     else:
         with open(path_neighbor_indices, 'rb') as handle:
             neighbor_patches = pickle.load(handle)               
+
+
         with open(path_indices, 'rb') as handle:
             index_patch = pickle.load(handle)
     return index_patch, neighbor_patches
@@ -258,28 +260,39 @@ def Load_data(PR):
     VAR_ = VAR()
     try:
         file_tmp = netCDF4.Dataset(PR.path_X,'r')
-        X = file_tmp.variables.items()[0][1][:].astype('float64')
+        X	= file_tmp.variables[PR.var][:].astype('float64')
+        # extract mask
+        mask	= X.mask
+        mask	= np.where(mask==True, np.nan, mask)
+        mask	= mask[PR.training_days:(PR.training_days+PR.test_days):,:,:]	
+        # extract data
+        X	= X.data
         X = X[-(PR.training_days+PR.test_days):]
         del file_tmp
+        file_tmp = netCDF4.Dataset(PR.path_mod,'r')
+        X_mod	= list(file_tmp.variables.items())[0][1][:].data.astype('float64')
+        X	= np.concatenate((X_mod[0:PR.training_days,:,:],\
+                                  X[PR.training_days:(PR.training_days+PR.test_days),:,:]), axis=0)
     except:
         print("Cannot find dataset: %s" %(PR.path_X))
         quit()
     # Load Optimal Interpolation as LR product
     try:
         file_tmp = netCDF4.Dataset(PR.path_OI,'r')
-        OI = file_tmp.variables.items()[0][1][:].astype('float64')
+        OI = file_tmp.variables[PR.var][:].data.astype('float64')
+        OI = OI[PR.training_days:(PR.training_days+PR.test_days),:,:]
         del file_tmp
     except:
         print("Cannot find dataset: %s" %(PR.path_OI))
         quit()
     # Load Alongtrack SLA as observation mask
-    try:
+    '''try:
         file_tmp = netCDF4.Dataset(PR.path_mask,'r')
         mask = file_tmp.variables.items()[0][1][:].astype('float64')
         del file_tmp
     except:
         print("Cannot find dataset: %s" %(PR.path_mask))
-        quit()
+        quit()'''
     # First step, filling missing data by OI
     X_initialization = np.copy(X)
     for i in range(PR.test_days):

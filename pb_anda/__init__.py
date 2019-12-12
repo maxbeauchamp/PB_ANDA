@@ -38,8 +38,8 @@ assert sys.version_info >= (3,6), "Need Python>=3.6"
 dirs = {}
 
 # Define paths
-datapath="/home3/datawork/mbeaucha"
-basepath="/home3/datahome/mbeaucha/algo/PB_ANDA"
+datapath="/home/user/Bureau/NATL60/DATA"
+basepath="/home/user/Bureau/PB_ANDA"
 
 print("Initializing PB-AnDA libraries...",flush=True)
 
