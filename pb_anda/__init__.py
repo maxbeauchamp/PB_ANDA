@@ -38,8 +38,8 @@ assert sys.version_info >= (3,6), "Need Python>=3.6"
 dirs = {}
 
 # Define paths
-datapath="/home/user/Bureau/NATL60/DATA"
-basepath="/home/user/Bureau/PB_ANDA"
+datapath="/home3/datawork/mbeaucha"
+basepath="/home3/datahome/mbeaucha/algo/PB_ANDA"
 
 print("Initializing PB-AnDA libraries...",flush=True)
 
@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import shapely
 from shapely import wkt
-import geopandas as gpd
+#import geopandas as gpd
 from cartopy import crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.io import shapereader
@@ -62,6 +62,7 @@ from scipy.sparse import diags
 from scipy.stats import multivariate_normal
 from scipy.ndimage.morphology import distance_transform_edt as bwdist
 from scipy.interpolate import RegularGridInterpolator
+import skill_metrics as sm
 import xarray as xr
 import netCDF4
 from pyflann import *
@@ -70,12 +71,12 @@ import xesmf as xe
 ##################################
 # Tools
 ##################################
-from .mods.AnDA_variables import *
-from .mods.AnDA_stat_functions import *
-from .mods.AnDA_transform_functions import *
-from .mods.AnDA_Multiscale_Assimilation import *
-from .mods.AnDA_analog_forecasting import *
-from .mods.AnDA_data_assimilation import *
+from .mods.tools import *
+from .mods.AnDA_variables import PR, VAR, General_AF, AnDA_result
+from .mods.AnDA_stat_functions import raPsd2dv1
+from .mods.AnDA_transform_functions import Load_data, Gradient, Post_process, LR_perform, VE_Dineof, MS_VE_Dineof, Imputing_NaN, PCA_perform
+from .mods.AnDA_stat_functions import AnDA_RMSE, AnDA_correlate
+from .mods.AnDA_Multiscale_Assimilation import Multiscale_Assimilation as MS_AnDA
 
 print("...Done") # ... initializing Libraries
 

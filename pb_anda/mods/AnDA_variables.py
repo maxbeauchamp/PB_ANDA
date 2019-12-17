@@ -1,4 +1,4 @@
-from pb_anda import *
+import numpy as np
 
 ###### Parameters setting for SST ###########################
 class PR:

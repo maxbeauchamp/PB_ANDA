@@ -1,4 +1,15 @@
-from pb_anda import *
+import numpy as np
+from pyflann import *
+from sklearn.decomposition import PCA
+from .AnDA_analog_forecasting import AnDA_analog_forecasting as AnDA_AF
+from .AnDA_data_assimilation import AnDA_data_assimilation
+from .AnDA_variables import General_AF, AnDA_result
+from .AnDA_stat_functions import AnDA_RMSE, AnDA_correlate
+from .AnDA_transform_functions import sum_overlapping
+import time
+import multiprocessing
+import pickle
+import mkl
 
 global VAR
 
@@ -43,7 +54,7 @@ class Multiscale_Assimilation:
         if (AF.flag_catalog):
             try:
                 # retrieving neighbor patchs
-                k_patch = VAR.index_patch.keys()[VAR.index_patch.values().index([r[0],c[0]])]
+                k_patch = list(VAR.index_patch.keys())[list(VAR.index_patch.values()).index([r[0],c[0]])]
                 listpos = VAR.neighbor_patchs[k_patch] 
                 listpos = sum(list(map((lambda x:range(x*self.PR.training_days,(x+1)*self.PR.training_days)),listpos)),[])      
                 # remove last patch at each position out of retrieving analogs

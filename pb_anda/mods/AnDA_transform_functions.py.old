@@ -7,15 +7,7 @@ __version__ = "1.0"
 __date__ = "2017-08-01"
 __email__ = "phi.huynhviet@telecom-bretagne.eu"
 
-import os
-import numpy as np
-from .AnDA_variables import VAR
-from sklearn.decomposition import PCA
-import pickle
-from scipy.ndimage.morphology import distance_transform_edt as bwdist
-import netCDF4
-import time
-import cv2
+from pb_anda import *
 
 def LR_perform(HR, path_LR, N_eof): 
     """ Perform global PCA retrieving LR product """   
@@ -159,9 +151,7 @@ def Post_process(Pre_filtered, L, size_w, n_eof):
     c_sub = np.arange(0,size_w)
     ind = 0
     while (len(r_sub)>0):
-        print(rsub)
         while (len(c_sub)>0):
-            print(csub)
             tmp = Pre_filtered[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
             tmp = tmp.reshape(tmp.shape[0],-1)
             sea_mask = np.where(~np.isnan(tmp[0,:]))[0]
@@ -225,8 +215,8 @@ def VE_Dineof(PR, HR, OI, mask, N_eof, n_iter):
     print("---Processing time:  %s seconds ---" % (time.time() - start_time))    
     return lr
 
-def MS_VE_Dineof(PR, HR, OI, Obs, N_eof, n_iter):
-    start_time = time.time()
+def MS_VE_Dineof(PR, HR, OI, mask, N_eof, n_iter):
+  
     X_initialization = np.copy(HR)    
     Post_filtered =  np.nan*np.zeros(OI.shape)
     r_sub = np.arange(0,20)
@@ -235,17 +225,12 @@ def MS_VE_Dineof(PR, HR, OI, Obs, N_eof, n_iter):
     while (len(r_sub)>0):
         while (len(c_sub)>0):
             lr = np.copy(OI[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1])
-            obs = np.copy(Obs[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1])
             sea_mask = np.where(~np.isnan(lr[0,:,:].flatten()))[0]
             if (len(sea_mask)>0):  
                 for i in range(n_iter):  
                     tmp = X_initialization[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
-                    # Replace GT by OI values for test days...
-                    tmp[PR.training_days:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1] =\
-                    lr[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
-                    # and by Obs where there is some data
                     for j in range(PR.test_days):
-                        tmp[PR.training_days+j,~np.isnan(obs[j,:,:])] = obs[j,~np.isnan(obs[j,:,:])]
+                        tmp[PR.training_days+j,np.isnan(mask[j,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1])] = lr[j,np.isnan(mask[j,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1])]
                     tmp = tmp.reshape(tmp.shape[0],-1)
                     tmp_no_land = tmp[:,sea_mask]                     
                     pca = PCA(n_components=len(sea_mask))
@@ -267,44 +252,47 @@ def MS_VE_Dineof(PR, HR, OI, Obs, N_eof, n_iter):
             c_sub = c_sub[c_sub<HR.shape[2]]    
         r_sub = r_sub+15
         r_sub = r_sub[r_sub<HR.shape[1]]
-        c_sub = np.arange(0,20)
-    print("---Processing time:  %s seconds ---" % (time.time() - start_time))    
+        c_sub = np.arange(0,20)         
     return Post_filtered
 
 def Load_data(PR):
     """ Load necessary datasets """
     VAR_ = VAR()
-    # Load GT
     try:
-        file_tmp = netCDF4.Dataset(PR.path_mod,'r')
-        X	= list(file_tmp.variables.items())[0][1][:].data.astype('float64')
+        file_tmp = netCDF4.Dataset(PR.path_X,'r')
+        X	= file_tmp.variables[PR.var][:].astype('float64')
+        # extract mask
+        mask	= X.mask
+        mask	= np.where(mask==True, np.nan, mask)
+        mask	= mask[PR.training_days:(PR.training_days+PR.test_days):,:,:]	
+        # extract data
+        X	= X.data
+        X = X[-(PR.training_days+PR.test_days):]
         del file_tmp
+        file_tmp = netCDF4.Dataset(PR.path_mod,'r')
+        X_mod	= list(file_tmp.variables.items())[0][1][:].data.astype('float64')
+        X	= np.concatenate((X_mod[0:PR.training_days,:,:],\
+                                  X[PR.training_days:(PR.training_days+PR.test_days),:,:]), axis=0)
     except:
-        print("Cannot find dataset: %s" %(PR.path_mod))
+        print("Cannot find dataset: %s" %(PR.path_X))
         quit()
     # Load Optimal Interpolation as LR product
     try:
         file_tmp = netCDF4.Dataset(PR.path_OI,'r')
         OI = file_tmp.variables[PR.var][:].data.astype('float64')
-        OI = OI[PR.training_days:,:,:]
+        OI = OI[PR.training_days:(PR.training_days+PR.test_days),:,:]
         del file_tmp
     except:
         print("Cannot find dataset: %s" %(PR.path_OI))
         quit()
-    # Load Alongtrack SLA and its observation mask
-    try:
-        file_tmp = netCDF4.Dataset(PR.path_X,'r')
-        Obs	= file_tmp.variables[PR.var][:].astype('float64')
-        Obs 	= Obs[PR.training_days:,:,:]
-        # extract mask
-        mask	= Obs.mask
-        mask	= np.where(mask==True, np.nan, mask)
-        # extract data
-        Obs	= Obs.data
+    # Load Alongtrack SLA as observation mask
+    '''try:
+        file_tmp = netCDF4.Dataset(PR.path_mask,'r')
+        mask = file_tmp.variables.items()[0][1][:].astype('float64')
         del file_tmp
     except:
-        print("Cannot find dataset: %s" %(PR.path_X))
-        quit()
+        print("Cannot find dataset: %s" %(PR.path_mask))
+        quit()'''
     # First step, filling missing data by OI
     X_initialization = np.copy(X)
     for i in range(PR.test_days):
@@ -317,35 +305,33 @@ def Load_data(PR):
         VAR_.dX_orig = X-X_lr
         # Retrieve dX_OI for comparison with AnDA's results
         VAR_.Optimal_itrp = OI - X_lr[PR.training_days:,:,:]
+        del X_initialization, OI, X, X_lr
         # used for retrieving specific catalog for each patch position
         VAR_.index_patch, VAR_.neighbor_patchs = Patch_define(VAR_.dX_orig[0,:,:],PR.path_index_patches,PR.path_neighbor_patches, PR.patch_r, PR.patch_c)
         # Retrieve dSLA_patch in PCA space: catalog used for AnDA
         VAR_.dX_train, VAR_.dX_eof_coeff, VAR_.dX_eof_mu = PCA_perform(VAR_.dX_orig[:PR.training_days,:,:],PR.path_dX_PCA,PR.n,len(VAR_.index_patch),PR.patch_r,PR.patch_c)
         # dSLA_GT as reference, dSLA_Obs by applying alongtrack mask
         VAR_.dX_GT_test = np.copy(VAR_.dX_orig[PR.training_days:,:,:])
-        # create the three datasets (Obs, OI and GT)
-        VAR_.Obs_test = np.copy(Obs)-X_lr[PR.training_days:,:,:]	# Obs
-        VAR_.Obs_test = VAR_.Obs_test[:PR.test_days:PR.lag,:,:]		# Obs (with tlag)
-        VAR_.dX_GT_test = VAR_.dX_GT_test[:PR.test_days:PR.lag,:,:]	# GT (with tlag)
-        VAR_.Optimal_itrp = VAR_.Optimal_itrp[:PR.test_days:PR.lag,:,:]	# OI (with tlag)
+        VAR_.Obs_test = np.copy(VAR_.dX_GT_test)   
+        for i in range(PR.test_days):
+            VAR_.Obs_test[i,np.isnan(mask[i,:,:])] = np.nan
+        VAR_.Obs_test = VAR_.Obs_test[:PR.test_days:PR.lag,:,:]
+        VAR_.dX_GT_test = VAR_.dX_GT_test[:PR.test_days:PR.lag,:,:]
+        VAR_.Optimal_itrp = VAR_.Optimal_itrp[:PR.test_days:PR.lag,:,:]
         VAR_.X_lr = np.concatenate((VAR_.X_lr[:PR.training_days,:,:],VAR_.X_lr[PR.training_days::PR.lag,:,:]),axis=0)
         VAR_.dX_orig = np.concatenate((VAR_.dX_orig[:PR.training_days,:,:],VAR_.dX_orig[PR.training_days::PR.lag,:,:]),axis=0)
-        del X_initialization, OI, X, X_lr
     else:
-        # create the three datasets (Obs, OI and GT)
-        VAR_.Obs_test = np.copy(Obs)					
-        VAR_.Obs_test = VAR_.Obs_test[:PR.test_days:PR.lag,:,:]		# Obs (with tlag)
         VAR_.dX_GT_test = np.copy(X[PR.training_days:,:,:])
-        VAR_.dX_GT_test = VAR_.dX_GT_test[:PR.test_days:PR.lag,:,:]	# GT (with tlag)
+        VAR_.dX_GT_test = VAR_.dX_GT_test[:PR.test_days:PR.lag,:,:]
+        VAR_.Obs_test = np.copy(VAR_.dX_GT_test)   
+        for i in range(PR.test_days):
+            VAR_.Obs_test[i,np.isnan(mask[i,:,:])] = np.nan
         VAR_.Optimal_itrp = np.copy(OI)
-        VAR_.Optimal_itrp = VAR_.Optimal_itrp[:PR.test_days:PR.lag,:,:]	# OI (with tlag)
+        VAR_.Optimal_itrp = VAR_.Optimal_itrp[:PR.test_days:PR.lag,:,:]
         #VAR_.dX_orig = np.concatenate((X[:PR.training_days,:,:],VAR_.Optimal_itrp),axis=0)
         VAR_.dX_orig = np.copy(X_initialization)
         VAR_.dX_orig = np.concatenate((VAR_.dX_orig[:PR.training_days,:,:],VAR_.dX_orig[PR.training_days::PR.lag,:,:]),axis=0)
         
     return VAR_
-
-
-
 
 

@@ -7,8 +7,8 @@ __version__ = "2.0"
 __date__ = "2017-08-01"
 __email__ = "phi.huynhviet@telecom-bretagne.eu"
 
-from pb_anda import *
-    
+import numpy as np
+
 def AnDA_RMSE(a,b):
     """ Compute the Root Mean Square Error between 2 n-dimensional vectors. """
     if (a.ndim==1):
@@ -20,7 +20,21 @@ def AnDA_RMSE(a,b):
     if (b.ndim>2):
         b = b.reshape(b.shape[0],-1)
     return np.sqrt(np.nanmean((a-b)**2,1))
+
     
+def AnDA_CRMSE(a,b):
+    """ Compute the Root Mean Square Error between 2 n-dimensional vectors. """
+    if (a.ndim==1):
+        a = a[np.newaxis]
+    if (a.ndim>2):
+        a = a.reshape(a.shape[0],-1)
+    if (b.ndim==1):
+        b = b[np.newaxis]
+    if (b.ndim>2):
+        b = b.reshape(b.shape[0],-1)
+    abar = np.nanmean(a)
+    bbar = np.nanmean(b)
+    return np.sqrt(np.nanmean(((a-abar)-(b-bbar))**2,1))
     
 def AnDA_correlate(a,b):
     """ Compute the Correlation between 2 n-dimensional vectors. """
@@ -36,7 +50,17 @@ def AnDA_correlate(a,b):
     b = b - np.nanmean(b,1)[np.newaxis].T
     r = np.nansum((a*b),1) / np.sqrt(np.nansum((a*a),1) * np.nansum((b*b),1))
     return r  
-    
+ 
+
+def AnDA_stdev(a):
+    """ Compute the Correlation between 2 n-dimensional vectors. """
+    if (a.ndim==1):
+        a = a[np.newaxis]
+    if (a.ndim>2):
+        a = a.reshape(a.shape[0],-1)
+    abar = np.nanmean(a)
+    return np.sqrt(np.nanmean((a-abar)**2,1))
+   
 
 def normalise(M):
     """ Normalize the entries of a multidimensional array sum to 1. """
