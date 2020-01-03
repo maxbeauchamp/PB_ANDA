@@ -75,7 +75,7 @@ from .mods.tools import *
 from .mods.AnDA_variables import PR, VAR, General_AF, AnDA_result
 from .mods.AnDA_stat_functions import raPsd2dv1
 from .mods.AnDA_transform_functions import Load_data, Gradient, Post_process, LR_perform, VE_Dineof, MS_VE_Dineof, Imputing_NaN, PCA_perform
-from .mods.AnDA_stat_functions import AnDA_RMSE, AnDA_correlate
+from .mods.AnDA_stat_functions import AnDA_RMSE, AnDA_CRMSE, AnDA_correlate, AnDA_stdev, Taylor_diag
 from .mods.AnDA_Multiscale_Assimilation import Multiscale_Assimilation as MS_AnDA
 
 print("...Done") # ... initializing Libraries

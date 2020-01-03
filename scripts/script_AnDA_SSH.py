@@ -22,7 +22,9 @@ def mk_dir_recursive(dir_path):
     if not os.path.isdir(new_path):
         os.mkdir(new_path)
 
-workpath="/home3/scratch/mbeaucha/resAnDA"
+# get the option (nadir, swot or nadirswot)
+opt	 = sys.argv[1]
+workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt
 if not os.path.exists(workpath):
     mk_dir_recursive(workpath)     
 
@@ -42,9 +44,15 @@ PR_ssh.G_PCA         = 20	# N_eof for global PCA
 
 # Input dataset
 PR_ssh.var		= "ssh_mod"					 # Variable to assimilate
-PR_ssh.path_X 		= datapath+'/data/dataset_swot.nc'      	 # Directory of ssh data
+# Directory of ssh data
+if opt=="nadir":
+    PR_ssh.path_X	= datapath+'/data/dataset_nadir.nc'
+elif opt=="swot":
+    PR_ssh.path_X       = datapath+'/data/dataset_swot.nc'   	
+else:
+    PR_ssh.path_X       = datapath+'/data/dataset_nadir_swot.nc'
 PR_ssh.path_mod 	= datapath+'/maps/NATL60-CJM165_ssh_y2013.1y.nc' # Directory of ssh NATL60 maps
-PR_ssh.path_OI 		= datapath+'/oi/ssh_NATL60_swot.nc'	 # Directory of OI product 
+PR_ssh.path_OI 		= datapath+'/oi/ssh_NATL60_4nadir.nc'	 # Directory of OI product 
 
 # Dataset automatically created during execution
 PR_ssh.path_X_lr 		= workpath+'/ssh_lr.nc'
@@ -84,10 +92,8 @@ print('...Done')
 			#***************#
 r_start = 0
 c_start = 0
-#r_length = 10*20
-#c_length = 10*20
-r_length = 50
-c_length = 50
+r_length = 10*20
+c_length = 10*20
 lon = np.arange(-65,-65+((1/20)*r_length),1/20)
 lat = np.arange(30,30+((1/20)*c_length),1/20)
 extent_=[np.min(lon),np.max(lon),np.min(lat),np.max(lat)]
@@ -99,7 +105,7 @@ saved_path =  workpath+'/saved_path.pickle'
 print('Start MS-VE-DINEOF...')
 itrp_dineof = MS_VE_Dineof(PR_ssh, VAR_ssh.dX_orig+VAR_ssh.X_lr,\
                            VAR_ssh.Optimal_itrp+VAR_ssh.X_lr[PR_ssh.training_days:],\
-                           VAR_ssh.Obs_test+VAR_ssh.X_lr[PR_ssh.training_days:],50,10)
+                           VAR_ssh.Obs_test,50,10)
 itrp_dineof = itrp_dineof[:,:r_length,:c_length]
 print('...Done')
 
@@ -118,14 +124,17 @@ print('Start Post-processing...')
 Pre_filtered = np.copy(VAR_ssh.dX_orig[:PR_ssh.training_days,r_start:r_start+r_length,c_start:c_start+c_length]+VAR_ssh.X_lr[:PR_ssh.training_days,r_start:r_start+r_length,c_start:c_start+c_length])
 Pre_filtered = np.concatenate((Pre_filtered,AnDA_ssh_1.itrp_AnDA),axis=0)
 AnDA_ssh_1.itrp_postAnDA = Post_process(Pre_filtered,len(VAR_ssh.Obs_test),17,15) 
+print('... Done 1st step')
 Pre_filtered = np.copy(VAR_ssh.dX_orig[:PR_ssh.training_days,r_start:r_start+r_length,c_start:c_start+c_length]+VAR_ssh.X_lr[:PR_ssh.training_days,r_start:r_start+r_length,c_start:c_start+c_length])
 Pre_filtered = np.concatenate((Pre_filtered,AnDA_ssh_1.itrp_postAnDA),axis=0)
 AnDA_ssh_1.itrp_postAnDA = Post_process(Pre_filtered,len(VAR_ssh.Obs_test),13,15)          
+print('... Done 2nd step')
 X_initialization = np.copy(VAR_ssh.X_lr[:,r_start:r_start+r_length,c_start:c_start+c_length]+VAR_ssh.dX_orig[:,r_start:r_start+r_length,c_start:c_start+c_length])
 X_initialization[PR_ssh.training_days:,:,:] = AnDA_ssh_1.itrp_postAnDA 
 X_lr = LR_perform(X_initialization,'',100)
 AnDA_ssh_1.itrp_postAnDA = X_lr[PR_ssh.training_days:,:,:]
-
+print('...Done')
+                
 # Save AnDA result         
 with open(saved_path, 'wb') as handle:
     pickle.dump([AnDA_ssh_1, itrp_dineof], handle)
@@ -133,7 +142,6 @@ with open(saved_path, 'wb') as handle:
 # Reload saved AnDA result
 with open(saved_path, 'rb') as handle:
     AnDA_ssh_1, itrp_dineof = pickle.load(handle)    
-print('...Done')
 
 			#*****************#
 			# Display results #
@@ -167,15 +175,14 @@ for i in range(0,len(AnDA_ssh_1.GT)):
             r"$\nabla_{AnDA}$",r"$\nabla_{VE-DINEOF}$",r"$\nabla_{Post_AnDA}$"]
     fig, ax = plt.subplots(4,3,
                           subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=0.0)))
-    #for j in range(0,len(var)):
-    for ivar in range(0,6):
+    for ivar in range(0,len(var)):
         i = int(np.floor(ivar/3)) ; j = ivar%3
         if (var[ivar])[0:4]=="Grad":
             vmin = np.nanmin(Grad_gt) ; vmax = np.nanmax(Grad_gt)
             cmap="viridis"
         else:
             vmin = np.nanmin(gt) ; vmax = np.nanmax(gt)
-            vmin=-2 ; vmax=2
+            #vmin=-2 ; vmax=2
             cmap="coolwarm"
         plot(ax,i,j,lon,lat,eval(var[ivar]),title[ivar],\
              extent=extent_,cmap=cmap,vmin=vmin,vmax=vmax)
@@ -185,43 +192,40 @@ for i in range(0,len(AnDA_ssh_1.GT)):
 
     ## Taylor diagrams
     resfile=workpath+"/Taylor_diagram_"+day+".pdf"
-    var=['gt','OI','AnDA','VE_DINEOF','Post_AnDA']
-    sdev = np.array([AnDA_stdev(ivar) for ivar in var])
-    crmsd = np.array([AnDA_CRMSE(eval(ivar),gt)])
-    ccoef = np.array([AnDA_correlate(eval(ivar),gt)])
-    label = ['GT','OI','VE-DINEOF','AnDA','Post_AnDA']
-    sm.taylor_diagram(sdev,crmsd,ccoef, markerLabel = label,
-                      markerLabelColor = 'r', 
-                      markerColor = 'r', markerLegend = 'on', 
-                      tickRMS = range(0,1,0.2), 
-                      colRMS = 'm', styleRMS = ':', widthRMS = 2.0, 
-                      titleRMS = 'on', titleRMSDangle = 40.0, 
-                      tickSTD = range(0,1,0.2),
-                      axismax = 0.3, colSTD = 'b', styleSTD = '-.', 
-                      widthSTD = 1.0, titleSTD = 'on', 
-                      colCOR = 'k', styleCOR = '--', widthCOR = 1.0, 
-                      titleCOR = 'on', markerSize = 10, alpha = 0.0,
-                      styleOBS = '-', colOBS = 'r', markerobs = 'o', 
-                      titleOBS = 'GT')
+    var=['gt','OI','AnDA','Post_AnDA','VE_DINEOF']
+    label = ['GT','OI','AnDA','Post_AnDA','VE_DINEOF']
+    series={'gt':gt,
+            'OI':OI,
+            'AnDA':AnDA,
+            'Post_AnDA':Post_AnDA,
+            'VE_DINEOF':VE_DINEOF}
+    Taylor_diag(series,label)
     plt.savefig(resfile)
     plt.close()
 
     ## Radial Power Spectrum (RAPS)
     resfile=workpath+"/results_AnDA_RAPS_"+day+".pdf"
     f0, Pf_AnDA  	= raPsd2dv1(AnDA_ssh_1.itrp_AnDA[i,:,:],resssh,True)
-    #f1, Pf_postAnDA 	= raPsd2dv1(AnDA_ssh_1.itrp_postAnDA[i,:,:],resssh,True)
+    f1, Pf_postAnDA 	= raPsd2dv1(AnDA_ssh_1.itrp_postAnDA[i,:,:],resssh,True)
     f2, Pf_GT    	= raPsd2dv1(AnDA_ssh_1.GT[i,:,:],resssh,True)
     f3, Pf_OI    	= raPsd2dv1(AnDA_ssh_1.itrp_OI[i,:,:],resssh,True)
     wf0			= 1/f0
-    #wf1         	= 1/f1
+    wf1         	= 1/f1
     wf2         	= 1/f2
     wf3         	= 1/f3
-    plt.figure()
-    plt.loglog(wf2,Pf_GT,label='GT')
-    plt.loglog(wf3,Pf_OI,label='OI')
-    plt.loglog(wf0,Pf_AnDA,label='AnDA')
-    #plt.loglog(wf2,Pf_postAnDA,label='postAnDA')
-    plt.gca().invert_xaxis()
-    plt.legend()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(wf2,Pf_GT,label='GT')
+    ax.plot(wf3,Pf_OI,label='OI')
+    ax.plot(wf0,Pf_AnDA,label='AnDA')
+    ax.plot(wf2,Pf_postAnDA,label='postAnDA')
+    ax.set_xlabel("Wavenumber", fontweight='bold')
+    ax.set_ylabel("Power spectral density (m2/(cy/km))", fontweight='bold')
+    ax.set_xscale('log') ; ax.set_yscale('log')
+    plt.legend(loc='best')
+    plt.xticks([50, 100, 200, 500, 1000], ["50km", "100km", "200km", "500km", "1000km"])
+    ax.invert_xaxis()
+    plt.grid(which='both', linestyle='--')
     plt.savefig(resfile)	# save the figure
     plt.close()		# close the figure
+
