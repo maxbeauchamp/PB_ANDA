@@ -99,7 +99,7 @@ saved_path =  workpath+'/saved_path.pickle'
 print('Start MS-VE-DINEOF...')
 itrp_dineof = MS_VE_Dineof(PR_ssh, VAR_ssh.dX_orig+VAR_ssh.X_lr,\
                            VAR_ssh.Optimal_itrp+VAR_ssh.X_lr[PR_ssh.training_days:],\
-                           VAR_ssh.Obs_test+VAR_ssh.X_lr[PR_ssh.training_days:],50,10)
+                           VAR_ssh.Obs_test,50,10)
 itrp_dineof = itrp_dineof[:,:r_length,:c_length]
 print('...Done')
 
