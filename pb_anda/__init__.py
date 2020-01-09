@@ -11,6 +11,7 @@ __last_modification__	= "2019-12-10"
 ##################################
 import sys
 import os
+import shutil
 import time as timer
 from os.path import join as join_paths
 from datetime import date, datetime, timedelta

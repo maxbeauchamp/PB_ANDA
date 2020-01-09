@@ -16,13 +16,13 @@ def plot(ax,i,j,lon,lat,data,title,extent=[-65,-55,30,40],cmap="coolwarm",gridde
                        transform= ccrs.PlateCarree(central_longitude=0.0)) 
     im.set_clim(vmin,vmax)
     clb = plt.colorbar(im, orientation="horizontal", extend='both', pad=0.1, ax=ax[i][j])
-    ax[i][j].set_title(title, pad=20)
+    ax[i][j].set_title(title, pad=40, fontsize = 15)
     gl = ax[i][j].gridlines(alpha=0.5,draw_labels=True)
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
     gl.xlabels_bottom = False
     gl.ylabels_right = False
-    gl.xlabel_style = {'size': 5, 'rotation' : 45}
-    gl.ylabel_style = {'size': 5}
+    gl.xlabel_style = {'fontsize': 10, 'rotation' : 45}
+    gl.ylabel_style = {'fontsize': 10}
     ax[i][j].coastlines(resolution='50m')
 

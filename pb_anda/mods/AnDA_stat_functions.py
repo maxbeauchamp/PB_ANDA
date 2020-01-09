@@ -68,7 +68,7 @@ def AnDA_Taylor_stats(a,b):
     corr = np.nansum((a*b)) / np.sqrt(np.nansum((a*a)) * np.nansum((b*b)))
     return [crmsd, corr, sd]
 
-def Taylor_diag(series,names):
+def Taylor_diag(series,names,styles,colors):
     """ Taylor Diagram : obs is reference data sample
         in a full diagram (0 --> npi)
         --------------------------------------------------------------------------
@@ -90,7 +90,7 @@ def Taylor_diag(series,names):
     tf2 = GF.DictFormatter(dict(zip(tlocs2, map(str,str_locs2))))
     tr = PolarAxes.PolarTransform()
     smin = 0
-    smax = np.max(std)
+    smax = (120/100)*np.max(std)
     ghelper = FA.GridHelperCurveLinear(tr,
                                            extremes=(0,np.pi/2, # 1st quadrant
                                                      smin,smax),
@@ -127,11 +127,11 @@ def Taylor_diag(series,names):
     plt.clabel(CS, inline=1, fontsize=10)
     ax.plot(np.arccos(0.9999),ref,'k',marker='*',ls='', ms=10)
     aux = range(1,len(corr))
-    colors = plt.matplotlib.cm.jet(np.linspace(0,1,len(corr)))
+    #colors = plt.matplotlib.cm.jet(np.linspace(0,1,len(corr)))
     for i in aux:
-        ax.plot(np.arccos(corr[i]), std[i],c=colors[i],alpha=0.7,marker='o',label="%s" %names[i])
-        ax.text(np.arccos(corr[i]), std[i],"%s"%names[i])
-    plt.legend(bbox_to_anchor=(1.5, 1),prop=dict(size='large'),loc='best')
+        ax.plot(np.arccos(corr[i]), std[i],c=colors[i],alpha=0.7,marker=styles[i],label="%s" %names[i])
+        ax.text(np.arccos(corr[i]), std[i],"%s"%i)
+    plt.legend(bbox_to_anchor=(1.5, 1),prop=dict(size='small'),loc='best')
 
 
 def AnDA_stdev(a):

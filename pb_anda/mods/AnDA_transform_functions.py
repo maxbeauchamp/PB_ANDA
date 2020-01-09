@@ -159,9 +159,7 @@ def Post_process(Pre_filtered, L, size_w, n_eof):
     c_sub = np.arange(0,size_w)
     ind = 0
     while (len(r_sub)>0):
-        print(r_sub)
         while (len(c_sub)>0):
-            print(c_sub)
             tmp = Pre_filtered[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
             tmp = tmp.reshape(tmp.shape[0],-1)
             sea_mask = np.where(~np.isnan(tmp[0,:]))[0]

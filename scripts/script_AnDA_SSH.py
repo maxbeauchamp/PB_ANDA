@@ -24,9 +24,13 @@ def mk_dir_recursive(dir_path):
 
 # get the option (nadir, swot or nadirswot)
 opt	 = sys.argv[1]
-workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt
+lag	 = sys.argv[2]
+workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag
 if not os.path.exists(workpath):
     mk_dir_recursive(workpath)     
+else:
+    shutil.rmtree(workpath)
+    mk_dir_recursive(workpath)
 
 			#*****************************#
 			# Parameters setting for ssh  #
@@ -46,11 +50,11 @@ PR_ssh.G_PCA         = 20	# N_eof for global PCA
 PR_ssh.var		= "ssh_mod"					 # Variable to assimilate
 # Directory of ssh data
 if opt=="nadir":
-    PR_ssh.path_X	= datapath+'/data/dataset_nadir.nc'
+    PR_ssh.path_X	= datapath+'/data/dataset_nadir_'+lag+'d.nc'
 elif opt=="swot":
     PR_ssh.path_X       = datapath+'/data/dataset_swot.nc'   	
 else:
-    PR_ssh.path_X       = datapath+'/data/dataset_nadir_swot.nc'
+    PR_ssh.path_X       = datapath+'/data/dataset_nadir_'+lag+'d_swot.nc'
 PR_ssh.path_mod 	= datapath+'/maps/NATL60-CJM165_ssh_y2013.1y.nc' # Directory of ssh NATL60 maps
 PR_ssh.path_OI 		= datapath+'/oi/ssh_NATL60_4nadir.nc'	 # Directory of OI product 
 
@@ -105,7 +109,7 @@ saved_path =  workpath+'/saved_path.pickle'
 print('Start MS-VE-DINEOF...')
 itrp_dineof = MS_VE_Dineof(PR_ssh, VAR_ssh.dX_orig+VAR_ssh.X_lr,\
                            VAR_ssh.Optimal_itrp+VAR_ssh.X_lr[PR_ssh.training_days:],\
-                           VAR_ssh.Obs_test,50,10)
+                           VAR_ssh.Obs_test+VAR_ssh.X_lr[PR_ssh.training_days:],50,10)
 itrp_dineof = itrp_dineof[:,:r_length,:c_length]
 print('...Done')
 
@@ -127,7 +131,7 @@ AnDA_ssh_1.itrp_postAnDA = Post_process(Pre_filtered,len(VAR_ssh.Obs_test),17,15
 print('... Done 1st step')
 Pre_filtered = np.copy(VAR_ssh.dX_orig[:PR_ssh.training_days,r_start:r_start+r_length,c_start:c_start+c_length]+VAR_ssh.X_lr[:PR_ssh.training_days,r_start:r_start+r_length,c_start:c_start+c_length])
 Pre_filtered = np.concatenate((Pre_filtered,AnDA_ssh_1.itrp_postAnDA),axis=0)
-AnDA_ssh_1.itrp_postAnDA = Post_process(Pre_filtered,len(VAR_ssh.Obs_test),13,15)          
+AnDA_ssh_1.itrp_postAnDA = Post_process(Pre_filtered,len(VAR_ssh.Obs_test),13,15)      
 print('... Done 2nd step')
 X_initialization = np.copy(VAR_ssh.X_lr[:,r_start:r_start+r_length,c_start:c_start+c_length]+VAR_ssh.dX_orig[:,r_start:r_start+r_length,c_start:c_start+c_length])
 X_initialization[PR_ssh.training_days:,:,:] = AnDA_ssh_1.itrp_postAnDA 
@@ -153,7 +157,7 @@ for i in range(0,len(AnDA_ssh_1.GT)):
                           + timedelta(days=PR_ssh.training_days+i),"%Y-%m-%d")
 
     ## Maps
-    resfile=workpath+"/results_AnDA_maps_"+day+".pdf"
+    resfile=workpath+"/results_AnDA_maps_"+day+".png"
     # Load data
     gt 			= AnDA_ssh_1.GT[i,:,:]
     Grad_gt             = Gradient(gt,2)
@@ -173,7 +177,7 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     title=['GT','Obs','OI','AnDA','VE-DINEOF',\
            'Post_AnDA',r"$\nabla_{GT}$",r"$\nabla_{OI}$",\
             r"$\nabla_{AnDA}$",r"$\nabla_{VE-DINEOF}$",r"$\nabla_{Post_AnDA}$"]
-    fig, ax = plt.subplots(4,3,
+    fig, ax = plt.subplots(4,3,figsize=(15,15),
                           subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=0.0)))
     for ivar in range(0,len(var)):
         i = int(np.floor(ivar/3)) ; j = ivar%3
@@ -191,7 +195,7 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     plt.close()		# close the figure
 
     ## Taylor diagrams
-    resfile=workpath+"/Taylor_diagram_"+day+".pdf"
+    resfile=workpath+"/Taylor_diagram_"+day+".png"
     var=['gt','OI','AnDA','Post_AnDA','VE_DINEOF']
     label = ['GT','OI','AnDA','Post_AnDA','VE_DINEOF']
     series={'gt':gt,
@@ -199,12 +203,12 @@ for i in range(0,len(AnDA_ssh_1.GT)):
             'AnDA':AnDA,
             'Post_AnDA':Post_AnDA,
             'VE_DINEOF':VE_DINEOF}
-    Taylor_diag(series,label)
+    Taylor_diag(series,label,['o','o','o','o','o'],plt.matplotlib.cm.jet(np.linspace(0,1,5)))
     plt.savefig(resfile)
     plt.close()
 
     ## Radial Power Spectrum (RAPS)
-    resfile=workpath+"/results_AnDA_RAPS_"+day+".pdf"
+    resfile=workpath+"/results_AnDA_RAPS_"+day+".png"
     f0, Pf_AnDA  	= raPsd2dv1(AnDA_ssh_1.itrp_AnDA[i,:,:],resssh,True)
     f1, Pf_postAnDA 	= raPsd2dv1(AnDA_ssh_1.itrp_postAnDA[i,:,:],resssh,True)
     f2, Pf_GT    	= raPsd2dv1(AnDA_ssh_1.GT[i,:,:],resssh,True)
