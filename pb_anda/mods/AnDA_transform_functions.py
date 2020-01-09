@@ -159,9 +159,7 @@ def Post_process(Pre_filtered, L, size_w, n_eof):
     c_sub = np.arange(0,size_w)
     ind = 0
     while (len(r_sub)>0):
-        print(rsub)
         while (len(c_sub)>0):
-            print(csub)
             tmp = Pre_filtered[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
             tmp = tmp.reshape(tmp.shape[0],-1)
             sea_mask = np.where(~np.isnan(tmp[0,:]))[0]
@@ -240,12 +238,10 @@ def MS_VE_Dineof(PR, HR, OI, Obs, N_eof, n_iter):
             if (len(sea_mask)>0):  
                 for i in range(n_iter):  
                     tmp = X_initialization[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
-                    # Replace GT by OI values for test days...
-                    tmp[PR.training_days:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1] =\
-                    lr[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
+                    tmp[PR.training_days:] = obs
                     # and by Obs where there is some data
                     for j in range(PR.test_days):
-                        tmp[PR.training_days+j,~np.isnan(obs[j,:,:])] = obs[j,~np.isnan(obs[j,:,:])]
+                        tmp[PR.training_days+j,np.isnan(obs[j,:,:])] = lr[j,np.isnan(obs[j,:,:])]
                     tmp = tmp.reshape(tmp.shape[0],-1)
                     tmp_no_land = tmp[:,sea_mask]                     
                     pca = PCA(n_components=len(sea_mask))
@@ -262,7 +258,6 @@ def MS_VE_Dineof(PR, HR, OI, Obs, N_eof, n_iter):
                     tmp1 = lr[u,:,:]               
                     Post_filtered[u,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1] = sum_overlapping(tmp1,tmp2)
                 ind = ind+1
-                print(ind)
             c_sub = c_sub+15
             c_sub = c_sub[c_sub<HR.shape[2]]    
         r_sub = r_sub+15
@@ -287,6 +282,7 @@ def Load_data(PR):
         file_tmp = netCDF4.Dataset(PR.path_OI,'r')
         OI = file_tmp.variables[PR.var][:].data.astype('float64')
         OI = OI[PR.training_days:,:,:]
+        #OI = OI[PR.test_days,:,:]
         del file_tmp
     except:
         print("Cannot find dataset: %s" %(PR.path_OI))
@@ -296,6 +292,7 @@ def Load_data(PR):
         file_tmp = netCDF4.Dataset(PR.path_X,'r')
         Obs	= file_tmp.variables[PR.var][:].astype('float64')
         Obs 	= Obs[PR.training_days:,:,:]
+        #Obs    = Obs[PR.test_days,:,:]
         # extract mask
         mask	= Obs.mask
         mask	= np.where(mask==True, np.nan, mask)
@@ -309,6 +306,7 @@ def Load_data(PR):
     X_initialization = np.copy(X)
     for i in range(PR.test_days):
         X_initialization[PR.training_days+i,np.isnan(mask[i,:,:])] = OI[i,np.isnan(mask[i,:,:])]
+        #X_initialization[PR.test_days[i],np.isnan(mask[i,:,:])] = OI[i,np.isnan(mask[i,:,:])]
     # Perform global PCA to find LR product
     X_lr = LR_perform(X_initialization,PR.path_X_lr,PR.G_PCA)
     VAR_.X_lr = X_lr
@@ -321,6 +319,7 @@ def Load_data(PR):
         VAR_.index_patch, VAR_.neighbor_patchs = Patch_define(VAR_.dX_orig[0,:,:],PR.path_index_patches,PR.path_neighbor_patches, PR.patch_r, PR.patch_c)
         # Retrieve dSLA_patch in PCA space: catalog used for AnDA
         VAR_.dX_train, VAR_.dX_eof_coeff, VAR_.dX_eof_mu = PCA_perform(VAR_.dX_orig[:PR.training_days,:,:],PR.path_dX_PCA,PR.n,len(VAR_.index_patch),PR.patch_r,PR.patch_c)
+        #VAR_.dX_train, VAR_.dX_eof_coeff, VAR_.dX_eof_mu = PCA_perform(VAR_.dX_orig[PR.training_days,:,:],PR.path_dX_PCA,PR.n,len(VAR_.index_patch),PR.patch_r,PR.patch_c)
         # dSLA_GT as reference, dSLA_Obs by applying alongtrack mask
         VAR_.dX_GT_test = np.copy(VAR_.dX_orig[PR.training_days:,:,:])
         # create the three datasets (Obs, OI and GT)
