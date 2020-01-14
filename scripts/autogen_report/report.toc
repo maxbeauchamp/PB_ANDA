@@ -1,0 +1,7 @@
+\contentsline {section}{\numberline {1}OSSE sans erreurs d'observations}{1}{section.0.1}
+\contentsline {subsection}{\numberline {1.1}NRMSE et agr\IeC {\'e}gation des donn\IeC {\'e}es nadir}{1}{subsection.0.1.1}
+\contentsline {subsection}{\numberline {1.2}NRMSE et couverture spatiale des donn\IeC {\'e}es journali\IeC {\`e}res}{2}{subsection.0.1.2}
+\contentsline {subsection}{\numberline {1.3}Rendu cartographique et scores (2013--) }{3}{subsection.0.1.3}
+\contentsline {subsubsection}{Cartes de la SSH et gradient associ\IeC {\'e}}{3}{section*.2}
+\contentsline {subsubsection}{Scores}{5}{section*.3}
+\contentsline {section}{\numberline {2}OSSE avec erreurs d'observations}{5}{section.0.2}

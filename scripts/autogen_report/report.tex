@@ -1,0 +1,119 @@
+\documentclass[fleqn]{report}
+
+\renewcommand{\thesection}{\arabic{section}}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{relsize}
+\geometry{
+ a4paper,total={170mm,257mm},
+ left=30mm,right=30mm,top=30mm,bottom=30mm
+}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{ragged2e}
+\usepackage{multicol}
+\usepackage[justification=centering]{caption}
+\usepackage{subfig}
+\usepackage{supertabular}
+\usepackage{float}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+%\newcommand{\justify}{\rightskip0pt \leftskip0pt}
+\AtBeginDocument{
+ \renewcommand{\figurename}{\small{Figure}}
+ \renewcommand{\tablename}{\small{Table }}
+}
+\renewcommand{\footnoterule}{}
+
+\justifying
+
+\let\oldenumerate=\enumerate
+\renewenvironment{enumerate}{\oldenumerate\justifying}{\endlist}
+
+\setlength{\unitlength}{1pt}
+
+\renewcommand{\contentsname}{Table des matières}
+
+\title{Rapport du Lot 1 ``Consolidation des algorithmes basés données et intelligence artificielle pour l'océanographie" \newline \smaller{} \textit{de la Convention 190787/00 ``Méthodes de data science et intelligence artificielle pour la reconstruction des champs altimétrique DUACS}}
+
+\author{Maxime Beauchamp$^{1}$\footnote{Correspondance. Tel.: +33 (0) 6 74 32 47 01.\newline\textit{E-mail address:} maxime.beauchamp76@gmail.com (M. Beauchamp)}, Ronan Fablet$^{1}$ \\ 
+{\small 1. IMT Atlantique (anciennement IMT/Télécom Bretagne)} \\  	
+{\small UMR 6285 LabSTICC, TOMS (Statistical Signal Processing and Remote Sensing)} \\
+{\small Technopole Brest-Iroise - CS 83818} \\
+{\small 29238 Brest Cedex 3 (France)} }
+
+\date{Janvier 2019}
+
+\begin{document}
+
+{
+\makeatletter
+\addtocounter{footnote}{1} % to get dagger instead of star
+\renewcommand\thefootnote{\@fnsymbol\c@footnote}%
+\makeatother
+\maketitle
+}
+
+\maketitle
+
+\begin{small}
+\tableofcontents
+\end{small}
+
+
+\section{OSSE sans erreurs d'observations}
+
+\subsection{NRMSE et agrégation des données nadir}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=12cm]{/home3/scratch/mbeaucha/compare_AnDA_nadlag_mod/TS_AnDA_nadir_nadlag.png}
+  \caption{NRMSE journalière à partir des données nadir en fonction du pas d'agrégation D$\pm k$, $k=0,\cdots,5$}
+\end{figure} 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=12cm]{/home3/scratch/mbeaucha/compare_AnDA_nadlag_mod/TS_AnDA_nadirswot_nadlag.png}
+  \caption{NRMSE journalière à partir des données fusionnées nadir/swot en fonction du pas d'agrégation D$\pm k$, $k=0,\cdots,5$}
+\end{figure} 
+
+\subsection{NRMSE et couverture spatiale des données journalières}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=12cm]{/home3/scratch/mbeaucha/scores_AnDA_nadlag_5_mod/TS_AnDA_nRMSE.png}
+  \caption{NRMSE journalière à partir des données nadir, swot et de leur fusion (voir les diagrammes en bâtons pour la couverture spatiale associée), pour les méthodes VE-DINEOF et Post-AnDA, en comparaison de l'OI avec 4 nadir (source CLS).}
+\end{figure} 
+
+\subsection{Rendu cartographique et scores (2013--) } 
+
+\subsubsection{Cartes de la SSH et gradient associé}
+
+\begin{figure}[H]
+  \hspace{-2cm}\includegraphics[width=18cm]{/home3/scratch/mbeaucha/scores_AnDA_nadlag_0_mod/results_AnDA_maps_2013-09-23.png}
+  \caption{Cartographies obtenues par OI, AnDA, Post-AnDA, VE-DINEOF à partir des observations nadir, swot et de leurs fusions, pour la date du }
+\end{figure} 
+
+\begin{figure}[H]
+  \hspace{-2cm}\includegraphics[width=18cm]{/home3/scratch/mbeaucha/scores_AnDA_nadlag_0_mod/results_AnDA_grads_2013-09-23.png}
+  \caption{Cartographies obtenues par OI, AnDA, Post-AnDA, VE-DINEOF à partir des observations nadir, swot et de leurs fusions, pour la date du }
+\end{figure}
+
+
+\subsubsection{Scores}
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Diagramme de Taylor]{
+  \includegraphics[width=15cm]{/home3/scratch/mbeaucha/scores_AnDA_nadlag_0_mod/Taylor_diagram_maps_2013-09-27.png}
+  }
+  \hfill
+  \subfloat[Spectre de puissance]{
+  \includegraphics[width=12cm]{/home3/scratch/mbeaucha/scores_AnDA_nadlag_0_mod/results_AnDA_RAPS_2013-09-27.png}
+  }
+  \caption{Diagramme de Taylor et Spectre de puissance (moyenné radialement) pour la date du }
+\end{figure} 
+
+\section{OSSE avec erreurs d'observations}
+
+
+\end{document}

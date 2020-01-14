@@ -25,7 +25,8 @@ def mk_dir_recursive(dir_path):
 # get the option (nadir, swot or nadirswot)
 opt	 = sys.argv[1]
 lag	 = sys.argv[2]
-workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag
+type_obs = sys.argv[3]
+workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs
 if not os.path.exists(workpath):
     mk_dir_recursive(workpath)     
 else:
@@ -43,11 +44,12 @@ PR_ssh.patch_r       = 20	# size of patch (patch 1°x1°)
 PR_ssh.patch_c       = 20	# size of patch
 PR_ssh.training_days = 365-50	# num of training images: 2012-10-01 -> 2013-09-29
 PR_ssh.test_days     = 50	# num of test images: 2015
+PR_ssh.flag_cont     = True
 PR_ssh.lag           = 1	# lag of time series: t -> t+lag
 PR_ssh.G_PCA         = 20	# N_eof for global PCA
 
 # Input dataset
-PR_ssh.var		= "ssh_mod"					 # Variable to assimilate
+PR_ssh.var		= "ssh_"+type_obs  # Variable to assimilate
 # Directory of ssh data
 if opt=="nadir":
     PR_ssh.path_X	= datapath+'/data/dataset_nadir_'+lag+'d.nc'
@@ -83,7 +85,10 @@ AF_ssh.regression 	= 'local_linear' # forecasting strategies select among:\
 					 # locally_constant, increment, local_linear
 AF_ssh.sampling 	= 'gaussian' 
 AF_ssh.B 		= 0.0001 # variance of initial state error
-AF_ssh.R 		= 0.0001 # variance of observation error
+if type_obs=="mod":
+    AF_ssh.R 		= 0.0001 # variance of observation error
+if type_obs=="obs":
+    AF_ssh.R            = 0.3 # variance of observation error (25-36cm, cf. discussion with M.Ballarotta CLS)
 
 """  Loading data  """
 VAR_ssh = VAR()
@@ -109,7 +114,7 @@ saved_path =  workpath+'/saved_path.pickle'
 print('Start MS-VE-DINEOF...')
 itrp_dineof = MS_VE_Dineof(PR_ssh, VAR_ssh.dX_orig+VAR_ssh.X_lr,\
                            VAR_ssh.Optimal_itrp+VAR_ssh.X_lr[PR_ssh.training_days:],\
-                           VAR_ssh.Obs_test,50,10)
+                           VAR_ssh.Obs_test+VAR_ssh.X_lr[PR_ssh.training_days:],50,10)
 itrp_dineof = itrp_dineof[:,:r_length,:c_length]
 print('...Done')
 

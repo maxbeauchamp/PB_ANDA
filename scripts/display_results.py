@@ -8,6 +8,7 @@ __date__ = "2019-12-10"
 __email__ = "maxime.beauchamp76@gmail.com"
 
 from pb_anda import *
+import matplotlib.dates as mdates
 np.random.seed(1)
 
 # function to create recursive paths
@@ -23,22 +24,26 @@ def mk_dir_recursive(dir_path):
         os.mkdir(new_path)
 
 lag      = sys.argv[1]
-workpath = "/home3/scratch/mbeaucha/scores_AnDA_nadlag_"+lag
+type_obs = sys.argv[2]
+workpath = "/home3/scratch/mbeaucha/scores_AnDA_nadlag_"+lag+"_"+type_obs
 if not os.path.exists(workpath):
     mk_dir_recursive(workpath)
-    
+else:
+    shutil.rmtree(workpath)
+    mk_dir_recursive(workpath)    
+
 # Reload saved AnDA result
-file_results_nadir='/home3/scratch/mbeaucha/resAnDA_nadir_nadlag_'+lag+'/saved_path.pickle'
+file_results_nadir='/home3/scratch/mbeaucha/resAnDA_nadir_nadlag_'+lag+"_"+type_obs+'/saved_path.pickle'
 with open(file_results_nadir, 'rb') as handle:
     AnDA_ssh_1, itrp_dineof = pickle.load(handle)
     AnDA_ssh_1_nadir = AnDA_ssh_1  
     itrp_dineof_nadir = itrp_dineof
-file_results_swot='/home3/scratch/mbeaucha/resAnDA_swot_nadlag_'+lag+'/saved_path.pickle'
+file_results_swot='/home3/scratch/mbeaucha/resAnDA_swot_nadlag_0_'+type_obs+'/saved_path.pickle'
 with open(file_results_swot, 'rb') as handle:
     AnDA_ssh_1, itrp_dineof = pickle.load(handle)
     AnDA_ssh_1_swot = AnDA_ssh_1  
     itrp_dineof_swot = itrp_dineof
-file_results_nadirswot='/home3/scratch/mbeaucha/resAnDA_nadirswot_nadlag_'+lag+'/saved_path.pickle'
+file_results_nadirswot='/home3/scratch/mbeaucha/resAnDA_nadirswot_nadlag_'+lag+"_"+type_obs+'/saved_path.pickle'
 with open(file_results_nadirswot, 'rb') as handle:
     AnDA_ssh_1, itrp_dineof = pickle.load(handle)
     AnDA_ssh_1_nadirswot = AnDA_ssh_1  
@@ -56,6 +61,19 @@ c_length = 10*20
 lon = np.arange(-65,-65+((1/20)*r_length),1/20)
 lat = np.arange(30,30+((1/20)*c_length),1/20)
 extent_=[np.min(lon),np.max(lon),np.min(lat),np.max(lat)]
+## Init variables for temporal analysis
+nrmse_OI=np.zeros(len(AnDA_ssh_1.GT))
+nrmse_Post_AnDA_nadir=np.zeros(len(AnDA_ssh_1.GT))
+nrmse_VE_DINEOF_nadir=np.zeros(len(AnDA_ssh_1.GT))
+nrmse_Post_AnDA_swot=np.zeros(len(AnDA_ssh_1.GT))
+nrmse_VE_DINEOF_swot=np.zeros(len(AnDA_ssh_1.GT))
+nrmse_Post_AnDA_nadirswot=np.zeros(len(AnDA_ssh_1.GT))
+nrmse_VE_DINEOF_nadirswot=np.zeros(len(AnDA_ssh_1.GT))
+## Observations spatial coverage
+nadcov=np.zeros(len(AnDA_ssh_1.GT))
+swotcov=np.zeros(len(AnDA_ssh_1.GT))
+nadswotcov=np.zeros(len(AnDA_ssh_1.GT))
+## Spatial analysis
 for i in range(0,len(AnDA_ssh_1.GT)):
     day=datetime.strftime(datetime.strptime("2012-10-01",'%Y-%m-%d')\
                           + timedelta(days=315+i),"%Y-%m-%d")
@@ -92,6 +110,20 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     Grad_AnDA_nadirswot          	= Gradient(AnDA_nadirswot,2)
     Post_AnDA_nadirswot 		= AnDA_ssh_1_nadirswot.itrp_postAnDA[i,:,:]
     Grad_Post_AnDA_nadirswot		= Gradient(Post_AnDA_nadirswot,2)
+
+    ## Compute spatial coverage
+    nadcov[i]		= len(np.argwhere(np.isfinite(obs_nadir.flatten())))/len(obs_nadir.flatten())
+    swotcov[i]		= len(np.argwhere(np.isfinite(obs_swot.flatten())))/len(obs_swot.flatten())
+    nadswotcov[i]	= len(np.argwhere(np.isfinite(obs_nadirswot.flatten())))/len(obs_nadirswot.flatten())
+
+    ## Compute NRMSE statistics (i.e. RMSE/stdev(gt) )
+    nrmse_OI[i]			= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(OI-np.nanmean(OI)))**2)))/np.nanstd(gt)
+    nrmse_Post_AnDA_nadir[i]	= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(Post_AnDA_nadir-np.nanmean(Post_AnDA_nadir)))**2)))/np.nanstd(gt)
+    nrmse_VE_DINEOF_nadir[i]	= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(VE_DINEOF_nadir-np.nanmean(VE_DINEOF_nadir)))**2)))/np.nanstd(gt)
+    nrmse_Post_AnDA_swot[i]	= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(Post_AnDA_swot-np.nanmean(Post_AnDA_swot)))**2)))/np.nanstd(gt)
+    nrmse_VE_DINEOF_swot[i]	= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(VE_DINEOF_swot-np.nanmean(VE_DINEOF_swot)))**2)))/np.nanstd(gt)
+    nrmse_Post_AnDA_nadirswot[i]= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(Post_AnDA_nadirswot-np.nanmean(Post_AnDA_nadirswot)))**2)))/np.nanstd(gt)
+    nrmse_VE_DINEOF_nadirswot[i]= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(VE_DINEOF_nadirswot-np.nanmean(VE_DINEOF_nadirswot)))**2)))/np.nanstd(gt) 
 
     # Display maps
     var=['obs_nadir','obs_swot','obs_nadirswot',\
@@ -224,22 +256,56 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(wf_ref[1:],Pf_GT[1:],label='GT')
-    ax.plot(wf0[1:],Pf_OI[1:],'y-',label='OI,')
-    ax.plot(wf1_nadir[1:],Pf_AnDA_nadir[1:],'r-',label='AnDA (nadir)')
-    ax.plot(wf1_swot[1:],Pf_AnDA_swot[1:],'g-',label='AnDA (swot)')
-    ax.plot(wf1_nadirswot[1:],Pf_AnDA_nadirswot[1:],'b-',label='AnDA (nadir+swot)')
-    ax.plot(wf2_nadir[1:],Pf_postAnDA_nadir[1:],'r--',label='post-AnDA (nadir)')
-    ax.plot(wf2_swot[1:],Pf_postAnDA_swot[1:],'g--',label='post-AnDA (swot)')
-    ax.plot(wf2_nadirswot[1:],Pf_postAnDA_nadirswot[1:],'b--',label='post-AnDA (nadir+swot)')
-    ax.plot(wf3_nadir[1:],Pf_VE_DINEOF_nadir[1:],'ro-',label='VE-DINEOF (nadir)')
-    ax.plot(wf3_swot[1:],Pf_VE_DINEOF_swot[1:],'go-',label='VE-DINEOF(swot)')
-    ax.plot(wf3_nadirswot[1:],Pf_VE_DINEOF_nadirswot[1:],'bo-',label='VE-DINEOF (nadir+swot)')
+    ax.plot(wf0[1:],Pf_OI[1:],'y-',linewidth=.5,label='OI,')
+    ax.plot(wf1_nadir[1:],Pf_AnDA_nadir[1:],'r-',linewidth=.5,label='AnDA (nadir)')
+    ax.plot(wf1_swot[1:],Pf_AnDA_swot[1:],'g-',linewidth=.5,label='AnDA (swot)')
+    ax.plot(wf1_nadirswot[1:],Pf_AnDA_nadirswot[1:],'b-',linewidth=.5,label='AnDA (nadir+swot)')
+    ax.plot(wf2_nadir[1:],Pf_postAnDA_nadir[1:],'r--',linewidth=.5,label='post-AnDA (nadir)')
+    ax.plot(wf2_swot[1:],Pf_postAnDA_swot[1:],'g--',linewidth=.5,label='post-AnDA (swot)')
+    ax.plot(wf2_nadirswot[1:],Pf_postAnDA_nadirswot[1:],'b--',linewidth=.5,label='post-AnDA (nadir+swot)')
+    ax.plot(wf3_nadir[1:],Pf_VE_DINEOF_nadir[1:],'ro-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
+    ax.plot(wf3_swot[1:],Pf_VE_DINEOF_swot[1:],'go-',linewidth=.5,markerSize=2,label='VE-DINEOF(swot)')
+    ax.plot(wf3_nadirswot[1:],Pf_VE_DINEOF_nadirswot[1:],'bo-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
     ax.set_xlabel("Wavenumber", fontweight='bold')
     ax.set_ylabel("Power spectral density (m2/(cy/km))", fontweight='bold')
     ax.set_xscale('log') ; ax.set_yscale('log')
-    plt.legend(loc='best',prop=dict(size='small'))
+    plt.legend(loc='best',prop=dict(size='small'),frameon=False)
     plt.xticks([50, 100, 200, 500, 1000], ["50km", "100km", "200km", "500km", "1000km"])
     ax.invert_xaxis()
     plt.grid(which='both', linestyle='--')
     plt.savefig(resfile)        # save the figure
     plt.close()         	# close the figure
+
+## Plot time series
+start = datetime.strptime("2012-10-01",'%Y-%m-%d')+timedelta(days=315)
+end = start + timedelta(days=50)
+ldate = mdates.drange(start,end,timedelta(days=1))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=5))
+# first axis with nRMSE time series
+plt.plot(ldate,nrmse_OI,'y-',linewidth=.5,label='OI')
+plt.plot(ldate,nrmse_Post_AnDA_nadir,'r--',linewidth=.5,label='post-AnDA (nadir)')
+plt.plot(ldate,nrmse_VE_DINEOF_nadir,'ro-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
+plt.plot(ldate,nrmse_Post_AnDA_swot,'g--',linewidth=.5,label='post-AnDA (swot)')
+plt.plot(ldate,nrmse_VE_DINEOF_swot,'go-',linewidth=.5,markerSize=2,label='VE-DINEOF (swot)')
+plt.plot(ldate,nrmse_Post_AnDA_nadirswot,'b--',linewidth=.5,label='post-AnDA (nadir+swot)')
+plt.plot(ldate,nrmse_VE_DINEOF_nadirswot,'bo-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
+plt.ylabel('nRMSE')
+plt.xlabel('Time (days)')
+plt.xticks(rotation=45, ha='right')
+plt.gcf().autofmt_xdate()
+plt.margins(x=0)
+plt.grid(True,alpha=.3)
+plt.legend(loc='upper left',prop=dict(size='small'),frameon=False,bbox_to_anchor=(0,1.02,1,0.2),ncol=3,mode="expand")
+# second axis with spatial coverage
+axes2 = plt.twinx()
+width=0.75
+p1 = axes2.bar(ldate, nadcov, width,color='r',alpha=0.25)
+p2 = axes2.bar(ldate, swotcov, width,bottom=nadcov,color='g',alpha=0.25)
+axes2.set_ylim(0, 1)
+axes2.set_ylabel('Spatial Coverage (%)')
+axes2.margins(x=0)
+resfile=workpath+"/TS_AnDA_nRMSE.png"
+plt.savefig(resfile,bbox_inches="tight")    # save the figure
+plt.close()         	# close the figure
+
