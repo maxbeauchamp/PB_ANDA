@@ -223,6 +223,48 @@ def VE_Dineof(PR, HR, OI, mask, N_eof, n_iter):
     print("---Processing time:  %s seconds ---" % (time.time() - start_time))    
     return lr
 
+'''
+# OLD VERSION
+def MS_VE_Dineof(PR, HR, OI, mask, N_eof, n_iter):
+    X_initialization = np.copy(HR)
+    Post_filtered =  np.nan*np.zeros(OI.shape)
+    r_sub = np.arange(0,20)
+    c_sub = np.arange(0,20)
+    ind = 0
+    while (len(r_sub)>0):
+        while (len(c_sub)>0):
+            lr = np.copy(OI[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1])
+            sea_mask = np.where(~np.isnan(lr[0,:,:].flatten()))[0]
+            if (len(sea_mask)>0):
+                for i in range(n_iter):
+                    tmp = X_initialization[:,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
+                    for j in range(PR.test_days):
+                        tmp[PR.training_days+j,np.isnan(mask[j,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1])] = lr[j,np.isnan(mask[j,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1])]
+                    tmp = tmp.reshape(tmp.shape[0],-1)
+                    tmp_no_land = tmp[:,sea_mask]
+                    pca = PCA(n_components=len(sea_mask))
+                    if (len(sea_mask)>N_eof):
+                        pca = PCA(n_components=N_eof)
+                    score_tmp = pca.fit_transform(tmp_no_land)
+                    coeff_tmp = pca.components_.T
+                    mu_tmp = pca.mean_
+                    DataReconstructed_tmp = np.dot(score_tmp, coeff_tmp.T) +mu_tmp
+                    tmp[:,sea_mask] = DataReconstructed_tmp
+                    lr = tmp[PR.training_days:,:].reshape(lr.shape)
+                for u in range(0,PR.test_days):
+                    tmp2 = Post_filtered[u,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1]
+                    tmp1 = lr[u,:,:]
+                    Post_filtered[u,r_sub[0]:r_sub[-1]+1,c_sub[0]:c_sub[-1]+1] = sum_overlapping(tmp1,tmp2)
+                ind = ind+1
+                print(ind)
+            c_sub = c_sub+15
+            c_sub = c_sub[c_sub<HR.shape[2]]
+        r_sub = r_sub+15
+        r_sub = r_sub[r_sub<HR.shape[1]]
+        c_sub = np.arange(0,20)
+    return Post_filtered
+'''
+
 def MS_VE_Dineof(PR, HR, OI, Obs, N_eof, n_iter):
     start_time = time.time()
     X_initialization = np.copy(HR)    
@@ -269,10 +311,17 @@ def MS_VE_Dineof(PR, HR, OI, Obs, N_eof, n_iter):
 def Load_data(PR):
     """ Load necessary datasets """
     VAR_ = VAR()
+    # If discontinuous data (reorganize datasets)
+    if PR.flag_cont == False:
+        N   = PR.training_days+PR.test_days
+        idx = np.concatenate([np.arange(PR.start_test+PR.test_days,N),\
+                           np.arange(0,(PR.start_test+PR.test_days))])
     # Load GT
     try:
         file_tmp = netCDF4.Dataset(PR.path_mod,'r')
         X	= list(file_tmp.variables.items())[0][1][:].data.astype('float64')
+        if PR.flag_cont == False:
+            X = X[idx]
         del file_tmp
     except:
         print("Cannot find dataset: %s" %(PR.path_mod))
@@ -281,8 +330,9 @@ def Load_data(PR):
     try:
         file_tmp = netCDF4.Dataset(PR.path_OI,'r')
         OI = file_tmp.variables[PR.var][:].data.astype('float64')
+        if PR.flag_cont == False:
+            OI = OI[idx]
         OI = OI[PR.training_days:,:,:]
-        #OI = OI[PR.test_days,:,:]
         del file_tmp
     except:
         print("Cannot find dataset: %s" %(PR.path_OI))
@@ -291,8 +341,9 @@ def Load_data(PR):
     try:
         file_tmp = netCDF4.Dataset(PR.path_X,'r')
         Obs	= file_tmp.variables[PR.var][:].astype('float64')
+        if PR.flag_cont == False:
+            Obs = Obs[idx]
         Obs 	= Obs[PR.training_days:,:,:]
-        #Obs    = Obs[PR.test_days,:,:]
         # extract mask
         mask	= Obs.mask
         mask	= np.where(mask==True, np.nan, mask)

@@ -9,6 +9,8 @@ class PR:
     patch_c = [] # size of patch
     training_days = [] # num of training images: 2008-2014 
     test_days = [] # num of test images: 2015
+    flag_cont = [] # test images at the end of the dataset or not
+    start_test= [] # start index of test images (used if flag_cont==False)   
     lag = [] # lag of time series: t -> t+lag
     G_PCA = [] # N_eof for global PCA
     # Input dataset

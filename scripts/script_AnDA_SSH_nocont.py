@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" script_AnDA_SSH.py: Application of MS_AnDA to spatio-temporal interpolation of SSH (sea surface height) from nadir and/or swot datasets. """
+""" script_AnDA_SSH_nocont.py: Application of MS_AnDA to spatio-temporal interpolation of SSH (sea surface height) from nadir and/or swot datasets. """
 
 __author__ = "Maxime Beauchamp"
 __version__ = "2.0"
@@ -26,7 +26,8 @@ def mk_dir_recursive(dir_path):
 opt	 = sys.argv[1]
 lag	 = sys.argv[2]
 type_obs = sys.argv[3]
-workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs
+start    = int(sys.argv[4])
+workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_"+str(start)
 if not os.path.exists(workpath):
     mk_dir_recursive(workpath)     
 else:
@@ -45,7 +46,7 @@ PR_ssh.patch_c       = 20	# size of patch
 PR_ssh.test_days     = 20       # num of test images: 20
 PR_ssh.training_days = 365-PR_ssh.test_days # num of training images: 2012-10-01 -> 2013-09-29
 PR_ssh.flag_cont     = False     # New option to deal with no continuous data (1)
-PR_ssh.start_test    = 60     # New option to deal with no continuous data (2)
+PR_ssh.start_test    = start     # New option to deal with no continuous data (2)
 PR_ssh.lag           = 1	# lag of time series: t -> t+lag
 PR_ssh.G_PCA         = 20	# N_eof for global PCA
 
@@ -149,96 +150,4 @@ print('...Done')
 with open(saved_path, 'wb') as handle:
     pickle.dump([AnDA_ssh_1, itrp_dineof], handle)
     
-# Reload saved AnDA result
-with open(saved_path, 'rb') as handle:
-    AnDA_ssh_1, itrp_dineof = pickle.load(handle)    
-
-			#*****************#
-			# Display results #
-			#*****************#
-
-resssh = 0.25
-for i in range(0,len(AnDA_ssh_1.GT)):
-    if PR_ssh.flag_cont == True:
-        day=datetime.strftime(datetime.strptime("2012-10-01",'%Y-%m-%d')\
-                          + timedelta(days=PR_ssh.training_days+i),"%Y-%m-%d")
-    else:
-        day=datetime.strftime(datetime.strptime("2012-10-01",'%Y-%m-%d')\
-                          + timedelta(days=PR_ssh.start_test+i),"%Y-%m-%d")
-    ## Maps
-    resfile=workpath+"/results_AnDA_maps_"+day+".png"
-    # Load data
-    gt 			= AnDA_ssh_1.GT[i,:,:]
-    Grad_gt             = Gradient(gt,2)
-    obs 		= AnDA_ssh_1.Obs[i,:,:]
-    OI                  = AnDA_ssh_1.itrp_OI[i,:,:]
-    Grad_OI             = Gradient(OI,2)
-    VE_DINEOF           = itrp_dineof[i,:,:]
-    Grad_VE_DINEOF      = Gradient(VE_DINEOF,2)
-    AnDA 		= AnDA_ssh_1.itrp_AnDA[i,:,:]
-    Grad_AnDA           = Gradient(AnDA,2)
-    Post_AnDA 		= AnDA_ssh_1.itrp_postAnDA[i,:,:]
-    Grad_Post_AnDA     = Gradient(Post_AnDA,2)
-
-    # Display figures
-    var=['gt','obs','OI','AnDA','VE_DINEOF',\
-         'Post_AnDA','Grad_gt','Grad_OI','Grad_AnDA','Grad_VE_DINEOF','Grad_Post_AnDA']
-    title=['GT','Obs','OI','AnDA','VE-DINEOF',\
-           'Post_AnDA',r"$\nabla_{GT}$",r"$\nabla_{OI}$",\
-            r"$\nabla_{AnDA}$",r"$\nabla_{VE-DINEOF}$",r"$\nabla_{Post_AnDA}$"]
-    fig, ax = plt.subplots(4,3,figsize=(15,15),
-                          subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=0.0)))
-    for ivar in range(0,len(var)):
-        i = int(np.floor(ivar/3)) ; j = ivar%3
-        if (var[ivar])[0:4]=="Grad":
-            vmin = np.nanmin(Grad_gt) ; vmax = np.nanmax(Grad_gt)
-            cmap="viridis"
-        else:
-            vmin = np.nanmin(gt) ; vmax = np.nanmax(gt)
-            #vmin=-2 ; vmax=2
-            cmap="coolwarm"
-        plot(ax,i,j,lon,lat,eval(var[ivar]),title[ivar],\
-             extent=extent_,cmap=cmap,vmin=vmin,vmax=vmax)
-    plt.subplots_adjust(hspace=0.85,wspace=0.85)
-    plt.savefig(resfile)	# save the figure
-    plt.close()		# close the figure
-
-    ## Taylor diagrams
-    resfile=workpath+"/Taylor_diagram_"+day+".png"
-    var=['gt','OI','AnDA','Post_AnDA','VE_DINEOF']
-    label = ['GT','OI','AnDA','Post_AnDA','VE_DINEOF']
-    series={'gt':gt,
-            'OI':OI,
-            'AnDA':AnDA,
-            'Post_AnDA':Post_AnDA,
-            'VE_DINEOF':VE_DINEOF}
-    Taylor_diag(series,label,['o','o','o','o','o'],plt.matplotlib.cm.jet(np.linspace(0,1,5)))
-    plt.savefig(resfile)
-    plt.close()
-
-    ## Radial Power Spectrum (RAPS)
-    resfile=workpath+"/results_AnDA_RAPS_"+day+".png"
-    f0, Pf_AnDA  	= raPsd2dv1(AnDA_ssh_1.itrp_AnDA[i,:,:],resssh,True)
-    f1, Pf_postAnDA 	= raPsd2dv1(AnDA_ssh_1.itrp_postAnDA[i,:,:],resssh,True)
-    f2, Pf_GT    	= raPsd2dv1(AnDA_ssh_1.GT[i,:,:],resssh,True)
-    f3, Pf_OI    	= raPsd2dv1(AnDA_ssh_1.itrp_OI[i,:,:],resssh,True)
-    wf0			= 1/f0
-    wf1         	= 1/f1
-    wf2         	= 1/f2
-    wf3         	= 1/f3
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(wf2,Pf_GT,label='GT')
-    ax.plot(wf3,Pf_OI,label='OI')
-    ax.plot(wf0,Pf_AnDA,label='AnDA')
-    ax.plot(wf2,Pf_postAnDA,label='postAnDA')
-    ax.set_xlabel("Wavenumber", fontweight='bold')
-    ax.set_ylabel("Power spectral density (m2/(cy/km))", fontweight='bold')
-    ax.set_xscale('log') ; ax.set_yscale('log')
-    plt.legend(loc='best')
-    plt.xticks([50, 100, 200, 500, 1000], ["50km", "100km", "200km", "500km", "1000km"])
-    ax.invert_xaxis()
-    plt.grid(which='both', linestyle='--')
-    plt.savefig(resfile)	# save the figure
-    plt.close()		# close the figure
 
