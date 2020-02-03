@@ -1,0 +1,246 @@
+\usepackage{graphicx}
+\usepackage{mwe}
+\usepackage{beamerthemeMontpellier}
+\usepackage[english, french]{babel}
+\usepackage[small,bf,sf,center,aboveskip=2pt,textfont=it]{caption}
+\usepackage[latin1]{inputenc}
+\usepackage{animate}
+\usepackage{xcolor}
+\definecolor{darkblue}{RGB}{38,38,134}
+\definecolor{cadmiumgreen}{rgb}{0.0, 0.42, 0.24}
+\usepackage{mathtools}
+\usepackage{subfig}
+\usepackage{ragged2e}
+\addtobeamertemplate{block begin}{}{\justifying} 
+\usecolortheme{rose}
+\usepackage[round]{natbib}
+\setlength\abovecaptionskip{5pt}
+\usepackage{geometry}
+\addtobeamertemplate{block begin}{}{\justifying}{}
+\geometry{%
+  papersize={17cm,13.5cm},
+  hmargin=1cm,%
+  vmargin=0cm,%
+  head=0.5cm,% might be changed later
+  headsep=0pt,%
+  foot=0.5cm% might be changed later
+  }% http://ctan.org/pkg/geometry
+% suppression des onglets de navigation
+\setbeamertemplate{navigation symbols}{}
+\setbeamerfont{frametitle}{size=\normalsize}
+\setbeamerfont{note page}{size=\scriptsize}
+
+% marge equations
+\setlength{\abovedisplayskip}{2pt}
+\setlength{\belowdisplayskip}{2pt}
+
+% configuration des marges
+\setbeamersize{text margin left=0.5cm}
+\setbeamersize{text margin right=0.5cm}
+  
+% configuration du pied de page
+\setbeamertemplate{footline}{
+\leavevmode%
+\hbox{\hspace*{-0.09cm}
+\begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+	\usebeamerfont{author in head/foot}\insertshortauthor%~~(\insertshortinstitute)
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.45\paperwidth,ht=2.25ex,dp=1ex,center]{section in head/foot}%
+	\usebeamerfont{section in head/foot}\insertshorttitle
+\end{beamercolorbox}%
+\begin{beamercolorbox}[wd=.3\paperwidth,ht=2.25ex,dp=1ex,right]{section in head/foot}%
+	\usebeamerfont{section in head/foot}\insertshortdate{}\hspace*{2em}
+	\insertframenumber{} \hspace*{2ex} % / \inserttotalframenumber\hspace*{2ex}
+\end{beamercolorbox}}%
+\vskip0pt%
+}
+
+
+\makeatletter
+\renewcommand{\itemize}[1][]{%
+  \beamer@ifempty{#1}{}{\def\beamer@defaultospec{#1}}%
+  \ifnum \@itemdepth >2\relax\@toodeep\else
+    \advance\@itemdepth\@ne
+    \beamer@computepref\@itemdepth% sets \beameritemnestingprefix
+    \usebeamerfont{itemize/enumerate \beameritemnestingprefix body}%
+    \usebeamercolor[fg]{itemize/enumerate \beameritemnestingprefix body}%
+    \usebeamertemplate{itemize/enumerate \beameritemnestingprefix body begin}%
+    \list
+      {\usebeamertemplate{itemize \beameritemnestingprefix item}}
+      {\def\makelabel##1{%
+          {%
+            \hss\llap{{%
+                \usebeamerfont*{itemize \beameritemnestingprefix item}%
+                \usebeamercolor[fg]{itemize \beameritemnestingprefix item}##1}}%
+          }%
+        }%
+      }
+  \fi%
+  \beamer@cramped%
+  \justifying% NEW
+  %\raggedright% ORIGINAL
+  \beamer@firstlineitemizeunskip%
+}
+\makeatother
+
+% NEW UNDERBRACE
+\makeatletter
+\def\underbrace#1{%
+   \@ifnextchar_{\tikz@@underbrace{#1}}{\tikz@@underbrace{#1}_{}}}
+\def\tikz@@underbrace#1_#2{%
+   \tikz[baseline=(a.base)] {\node[inner sep=2] (a) {\(#1\)};
+   \draw[line cap=round,decorate,decoration={brace,amplitude=4pt}]
+     (a.south east) -- node[pos=0.5,below,inner sep=7pt] {\(\scriptstyle #2\)} (a.south west);}}
+
+% NEW THEOREM STYLE
+\makeatletter
+\expandafter\let\csname beamer@@tmpop@theorem begin@numbered\endcsname\relax
+\defbeamertemplate{theorem begin}{numbered}
+{%
+  \begin{\inserttheoremblockenv}
+    {%
+      \inserttheoremname
+      \inserttheoremnumber
+      \ifx\inserttheoremaddition\@empty\else\ \inserttheoremaddition\fi% (\inserttheoremaddition)
+    }%
+}
+\makeatother
+
+%NEWSQUAREDOT
+\DeclareFontFamily{U}{MnSymbolC}{}
+\DeclareFontShape{U}{MnSymbolC}{m}{n}{
+  <-5.5> MnSymbolC5
+  <5.5-6.5> MnSymbolC6
+  <6.5-7.5> MnSymbolC7
+  <7.5-8.5> MnSymbolC8
+  <8.5-9.5> MnSymbolC9
+  <9.5-11.5> MnSymbolC10
+  <11.5-> MnSymbolCb12
+}{}
+\DeclareRobustCommand{\sqcdot}{%
+  \mathbin{\text{\usefont{U}{MnSymbolC}{m}{n}\symbol{"69}}}%
+}
+
+\setbeamertemplate{theorems}[numbered]
+
+\makeatletter
+\def\th@mystyle{%
+    \small\itshape % body font
+    \def\inserttheoremblockenv{block}
+  }
+\makeatother
+\theoremstyle{mystyle}
+\newtheorem*{mydef}{Definition}
+\theoremstyle{mystyle}
+\newtheorem*{hyp}{Hypothèse}
+
+\makeatletter
+\def\th@exstyle{%
+    \small\itshape % body font
+    %\setbeamercolor{block title example}{bg=purple,fg=white}
+    %\setbeamercolor{block body example}{bg=purple!20,fg=black}
+    %\def\inserttheoremblockenv{exampleblock}
+    \def\inserttheoremblockenv{block}
+   }
+\makeatother
+\theoremstyle{exstyle}
+\newtheorem*{ex}{}
+
+% définition de nouvelles commandes
+\newcommand{\Qr}{{\mathbb Q}}
+\newcommand{\Rr}{{\mathbb R}}
+\newcommand{\Zr}{{\mathbb Z}}
+\newcommand{\Qb}{\overline{\mathbb Q}}
+\newtheorem{thm}{Theorem}
+\newtheorem{dfn}{Definition}
+\AtBeginDocument{
+ %\renewcommand{\figurename}{Figure~}
+ %\renewcommand{\tablename}{Table~}
+}
+\captionsetup{labelformat=empty,labelsep=none}
+\renewcommand{\footnoterule}{}
+% (general command to vertically center horizontal material)
+\newcommand*{\vcenteredhbox}[1]{\begingroup
+\setbox0=\hbox{#1}\parbox{\wd0}{\box0}\endgroup}
+
+\setlength{\unitlength}{1pt}
+\shorthandoff{:}
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+
+\newlength\mywidth\setlength\mywidth{2cm}
+
+\newlength\firstwidth
+\setlength\firstwidth{1cm}
+
+\newlength\secondwidth
+\setlength\secondwidth{2\firstwidth}
+
+\setbeamertemplate{itemize item}{$\sqcdot$}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  \zoombox[box line width]{contents}
+%
+%  optimized version for beamer: in full screen, zoom boxes are centred
+%  in the viewer; useable with any documenclass
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\makeatletter
+\newsavebox\zb@x
+\newcounter{z@@m}
+\usepackage{calc}
+\newdimen\B@r\newdimen\P@r
+\newdimen\@zw\newdimen\@zh\newdimen\@zd
+
+\newcommand{\zoombox}[2][0]{%
+  \leavevmode%
+  \sbox\zb@x{#2}%
+  \setlength\B@r{1pt*\ratio{\wd\zb@x}{\ht\zb@x+\dp\zb@x}}%
+  \setlength\P@r{1pt*\ratio{\paperwidth}{\paperheight}}%
+  \ifdim\B@r>\P@r\relax%
+    \setlength\@zw{\wd\zb@x}\setlength\@zh{\@zw*\ratio{\paperheight}{\paperwidth}}%
+    \setlength\@zd{(\@zh-\ht\zb@x-\dp\zb@x)*\real{0.5}+\dp\zb@x}%
+    \setlength\@zh{\@zh-\@zd}%
+  \else%
+    \setlength\@zh{\ht\zb@x+\dp\zb@x}%
+    \setlength\@zw{\@zh*\ratio{\paperwidth}{\paperheight}}%
+    \setlength\@zh{\ht\zb@x}\setlength\@zd{\dp\zb@x}%
+  \fi%
+  \makebox[0pt][l]{\makebox[\wd\zb@x][c]{\makebox[\@zw][l]{%
+    \pdfdest name {zbfs\thez@@m} fitr
+      width  \@zw\space
+      height \@zh\space
+      depth  \@zd\space
+  }}}%
+  \pdfdest name {zb\thez@@m} fitr
+    width  \wd\zb@x\space
+    height \ht\zb@x\space
+    depth  \dp\zb@x\space
+  \immediate\pdfannot 
+    width  \wd\zb@x\space
+    height \ht\zb@x\space
+    depth  \dp\zb@x\space
+  {%
+    /Subtype/Link/H/N
+    /Border [0 0 #1 [1 2]]
+    /A <<
+      /S/JavaScript
+      /JS (
+        if(typeof(zoomed)=='undefined'||!zoomed){
+          var lastView=this.viewState;
+          if(app.fs.isFullScreen) this.gotoNamedDest('zbfs\thez@@m');
+          else this.gotoNamedDest('zb\thez@@m');
+          zoomed=true;
+        }else{
+          this.viewState=lastView;
+          zoomed=false;
+        }
+      )
+    >>
+  }%
+  \usebox{\zb@x}%
+  \stepcounter{z@@m}%
+} 
+\makeatother
+

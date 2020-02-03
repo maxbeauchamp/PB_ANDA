@@ -53,7 +53,7 @@ with open(file_results_nadirswot, 'rb') as handle:
 			# Display results #
 			#*****************#
 
-resssh = 0.25
+resssh = 4
 r_start = 0
 c_start = 0
 r_length = 10*20

@@ -1,0 +1,8 @@
+mktexlsr
+pdflatex Meeting_20202801.tex
+pdflatex Meeting_20202801.tex
+bibtex Meeting_20202801.aux
+pdflatex Meeting_20202801.tex
+
+
+

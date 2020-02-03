@@ -53,7 +53,7 @@ with open(file_results_nadirswot, 'rb') as handle:
 			# Display results #
 			#*****************#
 
-resssh = 0.25
+resssh = 4
 r_start = 0
 c_start = 0
 r_length = 10*20
@@ -135,6 +135,52 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     nrmse_VE_DINEOF_swot[i]	= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(VE_DINEOF_swot-np.nanmean(VE_DINEOF_swot)))**2)))/np.nanstd(gt)
     nrmse_Post_AnDA_nadirswot[i]= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(Post_AnDA_nadirswot-np.nanmean(Post_AnDA_nadirswot)))**2)))/np.nanstd(gt)
     nrmse_VE_DINEOF_nadirswot[i]= (np.sqrt(np.nanmean(((gt-np.nanmean(gt))-(VE_DINEOF_nadirswot-np.nanmean(VE_DINEOF_nadirswot)))**2)))/np.nanstd(gt) 
+
+    # Display individual maps
+    var=['gt','obs_nadir','obs_swot','obs_nadirswot',\
+         'OI','OI','OI',\
+         'AnDA_nadir','AnDA_swot','AnDA_nadirswot',\
+         'Post_AnDA_nadir','Post_AnDA_swot','Post_AnDA_nadirswot',\
+         'VE_DINEOF_nadir','VE_DINEOF_swot','VE_DINEOF_nadirswot',]
+    title=['Ground Truth','Obs (nadir)','Obs (swot)','Obs (nadir+swot)',\
+           'OI (nadir)','OI (nadir)','OI (nadir)',\
+           'AnDA (nadir)','AnDA (swot)','AnDA (nadir+swot)',\
+           'Post-AnDA (nadir)','Post-AnDA (swot)','Post-AnDA (nadir+swot)',\
+           'VE-DINEOF (nadir)','VE-DINEOF (swot)','VE-DINEOF (nadir+swot)']
+    for ivar in range(0,len(var)):
+        resfile = workpath+"/results_AnDA_maps_"+var+'_'+day+".png"
+        fig, ax = plt.subplots(1,1,figsize=(10,10),
+                          subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=0.0)))   
+        vmin = -2 ; vmax = 2
+        cmap="coolwarm"
+        plot(ax,0,0,lon,lat,eval(var[ivar]),title[ivar],\
+             extent=extent_,cmap=cmap,vmin=vmin,vmax=vmax)
+        plt.savefig(resfile)       # save the figure
+        plt.close()                 # close the figure
+
+    # Display individual gradient maps
+    var=['Grad_GT',\
+         'Grad_OI','Grad_OI','Grad_OI',\
+         'Grad_AnDA_nadir','Grad_AnDA_swot','Grad_AnDA_nadirswot',\
+         'Grad_Post_AnDA_nadir','Grad_Post_AnDA_swot','Grad_Post_AnDA_nadirswot',\
+         'Grad_VE_DINEOF_nadir','Grad_VE_DINEOF_swot','Grad_VE_DINEOF_nadirswot']
+    title=[r"$\nabla_{GT}$",\
+           r"$\nabla_{OI}$ (nadir)",r"$\nabla_{OI}$ (nadir)",r"$\nabla_{OI}$ (nadir)",\
+           r"$\nabla_{AnDA}$ (nadir)",r"$\nabla_{AnDA}$ (swot)",r"$\nabla_{AnDA} (nadir+swot)$",\
+           r"$\nabla_{Post-AnDA}$ (nadir)",r"$\nabla_{Post-AnDA} (swot)$",r"$\nabla_{Post-AnDA} (nadir+swot)$",\
+           r"$\nabla_{VE-DINEOF}$ (nadir)",r"$\nabla_{VE-DINEOF} (swot)$",r"$\nabla_{VE-DINEOF} (nadir+swot)$",]
+    for ivar in range(0,len(var)):
+        resfile = workpath+"/results_AnDA_grads_"+var+'_'+day+".png"
+        fig, ax = plt.subplots(1,1,figsize=(10,10),
+                          subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=0.0)))
+        vmin = 0 ; vmax = 0.2
+        cmap="viridis"
+        plot(ax,0,0,lon,lat,eval(var[ivar]),title[ivar],\
+             extent=extent_,cmap=cmap,vmin=vmin,vmax=vmax)
+        plt.savefig(resfile)       # save the figure
+        plt.close()                 # close the figure
+
+        
 
     # Display maps
     var=['obs_nadir','obs_swot','obs_nadirswot',\
@@ -274,9 +320,9 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     ax.plot(wf2_nadir[1:],Pf_postAnDA_nadir[1:],'r--',linewidth=.5,label='post-AnDA (nadir)')
     ax.plot(wf2_swot[1:],Pf_postAnDA_swot[1:],'g--',linewidth=.5,label='post-AnDA (swot)')
     ax.plot(wf2_nadirswot[1:],Pf_postAnDA_nadirswot[1:],'b--',linewidth=.5,label='post-AnDA (nadir+swot)')
-    ax.plot(wf3_nadir[1:],Pf_VE_DINEOF_nadir[1:],'ro-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
-    ax.plot(wf3_swot[1:],Pf_VE_DINEOF_swot[1:],'go-',linewidth=.5,markerSize=2,label='VE-DINEOF(swot)')
-    ax.plot(wf3_nadirswot[1:],Pf_VE_DINEOF_nadirswot[1:],'bo-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
+    ax.plot(wf3_nadir[1:],Pf_VE_DINEOF_nadir[1:],'rD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
+    ax.plot(wf3_swot[1:],Pf_VE_DINEOF_swot[1:],'gD-',linewidth=.5,markerSize=2,label='VE-DINEOF(swot)')
+    ax.plot(wf3_nadirswot[1:],Pf_VE_DINEOF_nadirswot[1:],'bD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
     ax.set_xlabel("Wavenumber", fontweight='bold')
     ax.set_ylabel("Power spectral density (m2/(cy/km))", fontweight='bold')
     ax.set_xscale('log') ; ax.set_yscale('log')
@@ -291,13 +337,13 @@ for i in range(0,len(AnDA_ssh_1.GT)):
 N = len(lday)
 print(N)
 # first axis with nRMSE time series
-plt.plot(range(N),nrmse_OI,'y-',linewidth=2,label='OI')
+plt.plot(range(N),nrmse_OI,'k-',linewidth=3,label='OI')
 plt.plot(range(N),nrmse_Post_AnDA_nadir,'r-',linewidth=.5,label='post-AnDA (nadir)')
-plt.plot(range(N),nrmse_VE_DINEOF_nadir,'ro-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
+plt.plot(range(N),nrmse_VE_DINEOF_nadir,'rD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
 plt.plot(range(N),nrmse_Post_AnDA_swot,'g-',linewidth=.5,label='post-AnDA (swot)')
-plt.plot(range(N),nrmse_VE_DINEOF_swot,'go-',linewidth=.5,markerSize=2,label='VE-DINEOF (swot)')
+plt.plot(range(N),nrmse_VE_DINEOF_swot,'gD-',linewidth=.5,markerSize=2,label='VE-DINEOF (swot)')
 plt.plot(range(N),nrmse_Post_AnDA_nadirswot,'b-',linewidth=.5,label='post-AnDA (nadir+swot)')
-plt.plot(range(N),nrmse_VE_DINEOF_nadirswot,'bo-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
+plt.plot(range(N),nrmse_VE_DINEOF_nadirswot,'bD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
 # add vertical bar to divide the 4 periods
 plt.axvline(x=19)
 plt.axvline(x=39)

@@ -1,0 +1,237 @@
+\documentclass{beamer}
+\input{sources.tex}
+\graphicspath{{pictures/}}
+%Page de garde
+\title[CLS/CNES/IMT-A Meeting]{\'{E}tude pour le développement de méthodes de data science \& \newline  d'intelligence artificielle pour la reconstruction des champs altimétriques DUACS}
+\author[Maxime Beauchamp, Ronan Fablet]{\underline{Maxime Beauchamp}, Ronan Fablet \\ \ \\ \ \\
+\includegraphics[height=12mm]{imt-a_logo.png}}
+\date{\today}
+
+\setcounter{tocdepth}{2}
+
+\begin{document}
+
+\frame{
+\maketitle
+}
+
+\section{Travaux (fin décembre 2019 - janvier 2020)}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Avancées des travaux (fin décembre 2019 - janvier 2020)}
+
+\begin{itemize}
+\item Prise en main du code AnDA \citep{lguensat_data-driven_2017,tandeo_combining_2015} et VE-DINEOF \citep{ping_improved_2016}
+\item Premiers runs avec et sans erreurs d'observation avec jeux tests correspondant à 4 périodes de 20 jours réparties tous les 80 jours. 
+\item Découverte du code DINAE \citep{fablet_end--end_2019}, en cours d'adaptation aux données altimétriques Nadir/Swot
+\end{itemize}
+
+\end{frame}
+
+\section{OSSE sans erreurs d'observations}
+\frame{\tableofcontents[currentsection]}
+
+\subsection{NRMSE et agrégation des données nadir}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Scores AnDA et aggrégation nadir}
+
+\begin{figure}[H]
+  \centering
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_MOD_NOCONT/compare_AnDA_nadlag_mod/TS_AnDA_nadir_nadlag.png}}
+  \caption{NRMSE journalière à partir des données nadir en fonction du pas d'agrégation D$\pm k$, $k=0,\cdots,5$}
+\end{figure} 
+
+\begin{itemize}
+\item La couverture spatiale des données nadir $<10\%$
+\item Sur les données synthétiques modèles, l'ajout de données nadir sur une fenêtre temporelle D$\pm k$, $k>0$ dégrade les scores
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_MOD_NOCONT/compare_AnDA_nadlag_mod/TS_AnDA_nadirswot_nadlag.png}}
+  \caption{NRMSE journalière à partir des données fusionnées nadir/swot en fonction du pas d'agrégation D$\pm k$, $k=0,\cdots,5$}
+\end{figure} 
+
+\begin{itemize}
+\item Les données SWOT augmentent fortement la couverture spatiale du domaine
+\item Absence de données SWOT pendant des fenêtres de $\pm$ 5 jours où la performance AnDA diminue logiquement
+\end{itemize}
+
+\end{frame}
+
+\subsection{NRMSE et couverture spatiale des données journalières}
+
+\begin{frame}[allowframebreaks]
+
+\frametitle{Scores OI/AnDA/VE-DINEOF}
+
+\begin{figure}[H]
+  \centering
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_MOD_NOCONT/scores_AnDA_nadlag_0_mod/TS_AnDA_nRMSE.png}}
+  \caption{NRMSE journalière à partir des données nadir, swot et de leur fusion (voir les diagrammes en bâtons pour la couverture spatiale associée), pour les méthodes VE-DINEOF et Post-AnDA, en comparaison de l'OI avec 4 nadir (source CLS).}
+\end{figure} 
+
+\begin{itemize}
+\item AnDA est globalement plus performant sur les périodes d'études
+\item AnDA est (presque) toujours meilleure que l'OI avec les données nadir et nadir/swot
+\item La performance de swot est dégradée les jours sans données (catalogue restreint à 1 an dégrade l'estimation par analogue ?)
+\end{itemize}
+
+\end{frame}
+
+\subsection{Rendu cartographique et scores (13 mai 2013) } 
+
+\subsubsection{Cartes de la SSH et gradient associé}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Cartes de la SSH et de son gradient}
+
+\begin{figure}[H]
+  \hspace{-2cm}\zoombox{\includegraphics[width=9cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_MOD_NOCONT/scores_AnDA_nadlag_0_mod/results_AnDA_maps_2013-05-13.png}}
+  \caption{Cartographies obtenues par OI, AnDA, Post-AnDA, VE-DINEOF à partir des observations nadir, swot et de leurs fusions, pour la date du 13 mai 2013}
+\end{figure} 
+
+\begin{figure}[H]
+  \hspace{-2cm}\zoombox{\includegraphics[width=9cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_MOD_NOCONT/scores_AnDA_nadlag_0_mod/results_AnDA_grads_2013-05-13.png}}
+  \caption{Cartographies obtenues par OI, AnDA, Post-AnDA, VE-DINEOF à partir des observations nadir, swot et de leurs fusions, pour la date du 13 mai 2013}
+\end{figure}
+
+\begin{itemize}
+\item AnDA permet de récupérer certaines structures fines manquées par l'OI
+\item Toujours quelques problèmes avec VE-DINEOF (les observations apparaissent sur la carte finale, nEOF ?) 
+\item Comparaison avec DINAE à ajouter dès que les codes seront finalisés 
+\end{itemize}
+
+
+\end{frame}
+
+\subsubsection{Scores}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Diagramme de Taylor et spectre de puissance}
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Diagramme de Taylor]{
+  \zoombox{\includegraphics[width=15cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_MOD_NOCONT/scores_AnDA_nadlag_0_mod/Taylor_diagram_maps_2013-05-13.png}}
+  }
+  \hfill
+  \subfloat[Spectre de puissance]{
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_MOD_NOCONT/scores_AnDA_nadlag_0_mod/results_AnDA_RAPS_2013-05-13.png}}
+  }
+  \caption{Diagramme de Taylor et Spectre de puissance (moyenné radialement) pour la date du 13 mai 2013}
+\end{figure} 
+
+\end{frame}
+
+\section{OSSE avec erreurs d'observations}
+\frame{\tableofcontents[currentsection]}
+
+\subsection{NRMSE et agrégation des données nadir}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Scores AnDA et aggrégation nadir}
+
+\begin{figure}[H]
+  \centering
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_OBS_NOCONT/compare_AnDA_nadlag_obs/TS_AnDA_nadir_nadlag.png}}
+  \caption{NRMSE journalière à partir des données nadir en fonction du pas d'agrégation D$\pm k$, $k=0,\cdots,5$}
+\end{figure} 
+
+\begin{itemize}
+\item Ajout d'une variance d'erreur d'environ 30cm$^2$
+\item Contrairement aux données synthétiques modèles, l'ajout de données nadir sur une fenêtre temporelle D$\pm k$, $k>0$ améliore les scores 
+\item La meilleure performance est obtenue avec $k=4/5$, ce qui est cohérent avec les travaux de \citep{lopez-radcenco_analog_2019}
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_OBS_NOCONT/compare_AnDA_nadlag_obs/TS_AnDA_nadirswot_nadlag.png}}
+  \caption{NRMSE journalière à partir des données fusionnées nadir/swot en fonction du pas d'agrégation D$\pm k$, $k=0,\cdots,5$}
+\end{figure} 
+
+\end{frame}
+
+\subsection{NRMSE et couverture spatiale des données journalières}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Scores OI/AnDA/VE-DINEOF}
+
+\begin{figure}[H]
+  \centering
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_OBS_NOCONT/scores_AnDA_nadlag_5_obs/TS_AnDA_nRMSE.png}}
+  \caption{NRMSE journalière à partir des données nadir, swot et de leur fusion (voir les diagrammes en bâtons pour la couverture spatiale associée), pour les méthodes VE-DINEOF et Post-AnDA, en comparaison de l'OI avec 4 nadir (source CLS).}
+\end{figure} 
+
+\begin{itemize}
+\item Résultats non satisfaisants : OSSE à revoir
+\end{itemize}
+
+\end{frame}
+
+\subsection{Rendu cartographique et scores (13 mai 2013) } 
+
+\subsubsection{Cartes de la SSH et gradient associé}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Cartes de la SSH et de son gradient}
+
+\begin{figure}[H]
+  \hspace{-2cm}\zoombox{\includegraphics[width=9cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_OBS_NOCONT/scores_AnDA_nadlag_5_obs/results_AnDA_maps_2013-05-13.png}}
+  \caption{Cartographies obtenues par OI, AnDA, Post-AnDA, VE-DINEOF à partir des observations nadir, swot et de leurs fusions, pour la date du 13 mai 2013}
+\end{figure} 
+
+\begin{figure}[H]
+  \hspace{-2cm}\zoombox{\includegraphics[width=9cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_OBS_NOCONT/scores_AnDA_nadlag_5_obs/results_AnDA_grads_2013-05-13.png}}
+  \caption{Cartographies obtenues par OI, AnDA, Post-AnDA, VE-DINEOF à partir des observations nadir, swot et de leurs fusions, pour la date du 13 mai 2013}
+\end{figure}
+
+\end{frame}
+
+\subsubsection{Scores}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Diagramme de Taylor et spectre de puissance}
+
+\begin{figure}[H]
+  \centering
+  \subfloat[Diagramme de Taylor]{
+  \zoombox{\includegraphics[width=15cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_OBS_NOCONT/scores_AnDA_nadlag_5_obs/Taylor_diagram_maps_2013-05-13.png}}
+  }
+  \hfill
+  \subfloat[Spectre de puissance]{
+  \zoombox{\includegraphics[width=7cm]{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/figs/RES_OBS_NOCONT/scores_AnDA_nadlag_5_obs/results_AnDA_RAPS_2013-05-13.png}}
+  }
+  \caption{Diagramme de Taylor et Spectre de puissance (moyenné radialement) pour la date du 13 mai 2013}
+\end{figure} 
+
+\end{frame}
+
+\section{Perspectives}
+\frame{\tableofcontents[currentsection]}
+
+\begin{frame}
+
+\frametitle{Février/Mars 2020 (perspectives)}
+\begin{itemize}
+\item Finaliser le portage du code DINAE (supervisé/non supervisé) et intégrer les résultats dans la filière de comparaison
+\item Améliorer la lisibilité des codes AnDA et DINAE (pour le transfert des algorithmes et codes développés) : création de \textbf{packages python PB\_ANDA et DINAE}, faciles à importer et des scripts de lancement associés.
+\item Rédaction des livrables L1.4 et L1.5
+\end{itemize}
+
+\end{frame}
+
+\section{Bibliographie}
+\begin{frame}[allowframebreaks]
+\frametitle{References}
+%\nocite{*}
+\small{
+\justify
+\bibliographystyle{abbrvnat}
+\bibliography{/home/user/Bureau/CDD_IMT-A/Meeting_20202801/refimta}
+}
+\end{frame}
+
+\end{document}

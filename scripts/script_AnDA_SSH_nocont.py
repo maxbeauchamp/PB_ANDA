@@ -90,7 +90,7 @@ AF_ssh.B 		= 0.0001 # variance of initial state error
 if type_obs=="mod":
     AF_ssh.R 		= 0.0001 # variance of observation error
 if type_obs=="obs":
-    AF_ssh.R            = 0.3 # variance of observation error (25-36cm, cf. discussion with M.Ballarotta CLS)
+    AF_ssh.R            = 0.001 # variance of observation error (25-36cm, cf. discussion with M.Ballarotta CLS)
 
 """  Loading data  """
 VAR_ssh = VAR()
@@ -116,7 +116,7 @@ saved_path =  workpath+'/saved_path.pickle'
 print('Start MS-VE-DINEOF...')
 itrp_dineof = MS_VE_Dineof(PR_ssh, VAR_ssh.dX_orig+VAR_ssh.X_lr,\
                            VAR_ssh.Optimal_itrp+VAR_ssh.X_lr[PR_ssh.training_days:],\
-                           VAR_ssh.Obs_test+VAR_ssh.X_lr[PR_ssh.training_days:],50,10)
+                           VAR_ssh.Obs_test+VAR_ssh.X_lr[PR_ssh.training_days:],20,50)
 itrp_dineof = itrp_dineof[:,:r_length,:c_length]
 print('...Done')
 

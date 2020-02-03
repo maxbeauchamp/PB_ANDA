@@ -89,7 +89,7 @@ AF_ssh.B 		= 0.0001 # variance of initial state error
 if type_obs=="mod":
     AF_ssh.R 		= 0.0001 # variance of observation error
 if type_obs=="obs":
-    AF_ssh.R            = 0.3 # variance of observation error (25-36cm, cf. discussion with M.Ballarotta CLS)
+    AF_ssh.R            = 0.003 # variance of observation error (25-36cm, cf. discussion with M.Ballarotta CLS)
 
 """  Loading data  """
 VAR_ssh = VAR()
