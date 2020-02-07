@@ -46,8 +46,10 @@ class General_AF:
         self.regression = []
         self.sampling = []
         self.list_kdtree = [] # store kdtree, nearest neighbor searcher
-        self.B = [] # variance of initial state error 
+        self.B = [] # variance of initial state error
+        self.Runiq = [] # variance unique or fonction of time lag
         self.R = [] # variance of observation error
+        self.coeff = [] # if Runiq==False, polynomial coefficients to estimate the R diagonal
     
         self.check_indices = [] 
         self.x_cond = [] # conditional state to retrieve analogs
@@ -87,12 +89,16 @@ class General_AF:
 ###### Datasets Definition ###########################
 class VAR:
     X_lr = []
+    timelag_train = []
+    timelag_test = []
     dX_orig = []
     Optimal_itrp = []    
     dX_train = [] # training catalogs  for dX in EOF space
     dX_eof_coeff = [] # EOF base vector
     dX_eof_mu = [] # EOF mean vector    
     dX_GT_test = [] # dX GT in test year
+    Obs_train = [] # Observation in train year, by applying mask to dX GT    
+    Mod_train = [] # Model at Observation location in train year  
     Obs_test = [] # Observation in test year, by applying mask to dX GT    
     dX_cond = [] # condition used for AF
     model_constraint = [] # gradient, velocity used as physical condition 

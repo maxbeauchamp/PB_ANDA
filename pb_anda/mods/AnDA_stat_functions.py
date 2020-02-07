@@ -14,6 +14,69 @@ import mpl_toolkits.axisartist.floating_axes as FA
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 from matplotlib.projections import PolarAxes
+import netCDF4
+import pandas as pd
+
+def fit_Rvar(obs,mod,lag,deg):
+    """ Fit the polynomial coefficients of function f,
+        var(obs-mod)=f(timelag)
+    """
+
+    obs = obs.flatten()
+    mod = mod.flatten()
+    lag = lag.flatten()
+
+    idx = ~np.isnan(obs)  
+    obs = obs[idx]
+    mod = mod[idx]
+    err=obs-mod
+    lag = lag[idx]
+
+    dfr = pd.DataFrame(np.transpose(np.asarray([err,lag])),columns=['error','lag'])
+    var= dfr.groupby("lag").error.agg(np.var)
+    var.index = np.arange(1,len(var)+1)
+    coeff = np.polyfit(np.unique(lag), var, deg)
+    
+    return coeff
+
+def plotFit_Rvar(obs,mod,lag,deg,ofile):
+    """ Plot the polynomial coefficients fitting of function f,
+        var(obs-mod)=f(timelag)
+    """
+
+    obs = obs.flatten()
+    mod = mod.flatten()
+    lag = lag.flatten()
+
+    idx = ~np.isnan(obs)
+    obs = obs[idx]
+    mod = mod[idx]
+    err=obs-mod
+    lag = lag[idx]
+
+    dfr = pd.DataFrame(np.transpose(np.asarray([err,lag])),columns=['error','lag'])
+    var= dfr.groupby("lag").error.agg(np.var)
+    var.index = np.arange(1,len(var)+1)
+    coeff = np.polyfit(np.unique(lag), var, deg)
+
+    fig, ax = plt.subplots(figsize=(10,7))
+    fit = pd.Series(np.polyval(coeff, np.unique(lag)))
+    fit.index = np.arange(1,len(var)+1)
+    ax.plot(fit,'k-',linewidth=2,label=r"$\mathrm{\widehat{Var}}[y-Hx | lag]=f(lag)$")
+    ax.plot(var,'r--',linewidth=1.25,label=r"$\mathrm{Var}[y-Hx | lag]$")
+    # boxplot
+    bp = dfr.boxplot(column="error",by="lag", showfliers=False,ax=ax, rot=45) 
+    ticks = ax.xaxis.get_ticklocs()
+    ticklabels = [l.get_text() for l in ax.xaxis.get_ticklabels()]
+    ax.xaxis.set_ticks(ticks[::10])
+    ax.xaxis.set_ticklabels(ticklabels[::10])
+    ax.set_ylim([-0.25,0.25])
+    ax.legend()
+    plt.title('')
+    fig.suptitle('')
+    plt.savefig(ofile)
+    plt.close()
+
 
 def AnDA_RMSE(a,b):
     """ Compute the Root Mean Square Error between 2 n-dimensional vectors. """
@@ -128,11 +191,31 @@ def Taylor_diag(series,names,styles,colors):
     ax.plot(np.arccos(0.9999),ref,'k',marker='*',ls='', ms=10)
     aux = range(1,len(corr))
     #colors = plt.matplotlib.cm.jet(np.linspace(0,1,len(corr)))
-    for i in aux:
+    for i in reversed(aux):
         ax.plot(np.arccos(corr[i]), std[i],c=colors[i],alpha=0.7,marker=styles[i],label="%s" %names[i])
-        ax.text(np.arccos(corr[i]), std[i],"%s"%i)
+        #ax.text(np.arccos(corr[i]), std[i],"%s"%i)
+    # inset axes....
+    axins = ax.inset_axes([1.1, 0, 0.3, 0.3])
+    def pol2cart(phi, rho):
+        x = rho * np.cos(phi)
+        y = rho * np.sin(phi)
+        return(x, y)
+    x = np.empty(len(aux))
+    y = np.empty(len(aux))
+    for i in reversed(aux):
+        x[i-1], y[i-1] = pol2cart(np.arccos(corr[i]), std[i]) 
+        axins.plot(x[i-1], y[i-1], c=colors[i],alpha=0.7,marker=styles[i],label="%s" %names[i])
+        #axins.text(x[i-1], y[i-1],"%s"%i)
+    # sub region of the original image
+    x1, x2, y1, y2 = np.min(x)-(1/50)*np.min(x), np.max(x)+(1/50)*np.max(x),\
+                     np.min(y)-(1)*np.min(y), np.max(y)+(1)*np.max(y)
+    axins.set_xlim(x1,x2)
+    axins.set_ylim(y1,y2)
+    axins.set_xticks([])
+    axins.set_yticks([])
+    axins.set_xticklabels('')
+    axins.set_yticklabels('')
     plt.legend(bbox_to_anchor=(1.5, 1),prop=dict(size='small'),loc='best')
-
 
 def AnDA_stdev(a):
     """ Compute the Correlation between 2 n-dimensional vectors. """
@@ -257,6 +340,22 @@ def cart2pol(x, y):
     rho = np.sqrt(x**2 + y**2)
     phi = np.arctan2(y, x)
     return(phi, rho)
+
+def avg_raPsd2dv1(img3d,res,hanning):
+    """ Computes and plots radially averaged power spectral density mean (power
+     spectrum) of an image set img3d along the first dimension.
+    """
+    N = img3d.shape[0]
+    for i in range(N):
+        img=img3d[i,:,:]
+        f_, Pf_ = raPsd2dv1(img,res,hanning)
+        if i==0:
+            f, Pf = f_, Pf_
+        else:
+            f = np.vstack((f,f_))
+            Pf= np.vstack((Pf,Pf_))
+    Pf = np.mean(Pf,axis=0)
+    return f_, Pf
     
 def raPsd2dv1(img,res,hanning):
     """ Computes and plots radially averaged power spectral density (power

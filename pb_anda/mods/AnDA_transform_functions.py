@@ -301,12 +301,20 @@ def Load_data(PR):
         Obs	= file_tmp.variables[PR.var][:].astype('float64')
         if PR.flag_cont == False:
             Obs = Obs[idx]
-        Obs 	= Obs[PR.training_days:,:,:]
+        Obs_train = Obs[:PR.training_days,:,:]
+        Obs_test  = Obs[PR.training_days:,:,:]
         # extract mask
         mask	= Obs.mask
         mask	= np.where(mask==True, np.nan, mask)
+        # extract timelag        
+        lag = file_tmp.variables["lag"][:].astype('float64')
+        if PR.flag_cont == False:
+            lag = lag[idx]
+        lag_train = lag[:PR.training_days,:,:]
+        lag_test  = lag[PR.training_days:,:,:]
         # extract data
-        Obs	= Obs.data
+        Obs_train = Obs_train.data
+        Obs_test  = Obs_test.data
         del file_tmp
     except:
         print("Cannot find dataset: %s" %(PR.path_X))
@@ -315,10 +323,11 @@ def Load_data(PR):
     X_initialization = np.copy(X)
     for i in range(PR.test_days):
         X_initialization[PR.training_days+i,np.isnan(mask[i,:,:])] = OI[i,np.isnan(mask[i,:,:])]
-        #X_initialization[PR.test_days[i],np.isnan(mask[i,:,:])] = OI[i,np.isnan(mask[i,:,:])]
     # Perform global PCA to find LR product
     X_lr = LR_perform(X_initialization,PR.path_X_lr,PR.G_PCA)
     VAR_.X_lr = X_lr
+    VAR_.timelag_train = lag_train
+    VAR_.timelag_test  = lag_test
     if (PR.flag_scale):
         # Retrieve dSLA: detail product, used for AnDA
         VAR_.dX_orig = X-X_lr
@@ -328,11 +337,12 @@ def Load_data(PR):
         VAR_.index_patch, VAR_.neighbor_patchs = Patch_define(VAR_.dX_orig[0,:,:],PR.path_index_patches,PR.path_neighbor_patches, PR.patch_r, PR.patch_c)
         # Retrieve dSLA_patch in PCA space: catalog used for AnDA
         VAR_.dX_train, VAR_.dX_eof_coeff, VAR_.dX_eof_mu = PCA_perform(VAR_.dX_orig[:PR.training_days,:,:],PR.path_dX_PCA,PR.n,len(VAR_.index_patch),PR.patch_r,PR.patch_c)
-        #VAR_.dX_train, VAR_.dX_eof_coeff, VAR_.dX_eof_mu = PCA_perform(VAR_.dX_orig[PR.training_days,:,:],PR.path_dX_PCA,PR.n,len(VAR_.index_patch),PR.patch_r,PR.patch_c)
         # dSLA_GT as reference, dSLA_Obs by applying alongtrack mask
         VAR_.dX_GT_test = np.copy(VAR_.dX_orig[PR.training_days:,:,:])
         # create the three datasets (Obs, OI and GT)
-        VAR_.Obs_test = np.copy(Obs)-X_lr[PR.training_days:,:,:]	# Obs
+        VAR_.Obs_train = np.copy(Obs_train)-X_lr[:PR.training_days,:,:]       # Obs (train)
+        VAR_.Mod_train = X[:PR.training_days,:,:]-X_lr[:PR.training_days,:,:] # Mod (train)
+        VAR_.Obs_test = np.copy(Obs_test)-X_lr[PR.training_days:,:,:]	# Obs
         VAR_.Obs_test = VAR_.Obs_test[:PR.test_days:PR.lag,:,:]		# Obs (with tlag)
         VAR_.dX_GT_test = VAR_.dX_GT_test[:PR.test_days:PR.lag,:,:]	# GT (with tlag)
         VAR_.Optimal_itrp = VAR_.Optimal_itrp[:PR.test_days:PR.lag,:,:]	# OI (with tlag)
@@ -341,13 +351,14 @@ def Load_data(PR):
         del X_initialization, OI, X, X_lr
     else:
         # create the three datasets (Obs, OI and GT)
-        VAR_.Obs_test = np.copy(Obs)					
+        VAR_.Obs_train = np.copy(Obs_train)                             # Obs (train)
+        VAR_.Mod_train = X[:PR.training_days,:,:]
+        VAR_.Obs_test = np.copy(Obs_test)					
         VAR_.Obs_test = VAR_.Obs_test[:PR.test_days:PR.lag,:,:]		# Obs (with tlag)
         VAR_.dX_GT_test = np.copy(X[PR.training_days:,:,:])
         VAR_.dX_GT_test = VAR_.dX_GT_test[:PR.test_days:PR.lag,:,:]	# GT (with tlag)
         VAR_.Optimal_itrp = np.copy(OI)
         VAR_.Optimal_itrp = VAR_.Optimal_itrp[:PR.test_days:PR.lag,:,:]	# OI (with tlag)
-        #VAR_.dX_orig = np.concatenate((X[:PR.training_days,:,:],VAR_.Optimal_itrp),axis=0)
         VAR_.dX_orig = np.copy(X_initialization)
         VAR_.dX_orig = np.concatenate((VAR_.dX_orig[:PR.training_days,:,:],VAR_.dX_orig[PR.training_days::PR.lag,:,:]),axis=0)
         

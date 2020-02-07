@@ -46,7 +46,7 @@ class Multiscale_Assimilation:
         if ((len(sea_mask)!=self.PR.patch_r*self.PR.patch_c) or self.PR.flag_scale): # bordering patches, reset to classic AF
             AF.flag_catalog = False
 
-        # observation for this patch    
+        # observation for this patch     
         obs_p = VAR.Obs_test[:,r[0]:r[-1]+1,c[0]:c[-1]+1]
         obs_p = obs_p.reshape(obs_p.shape[0],-1)
         obs_p_no_land = obs_p[:,sea_mask]   
@@ -147,7 +147,20 @@ class Multiscale_Assimilation:
             B = AF.B * np.eye(AF.coeff_dX.shape[1])
             H = AF.coeff_dX
             if (self.PR.flag_scale):
-                R = AF.R * np.eye(len(sea_mask)) 
+                if AF.Runiq == True:
+                    # R unique (same value along the R diagonal)
+                    R = AF.R * np.eye(len(sea_mask)) 
+                else:
+                    # R diagonal is a function of the lag value for each observation
+                    # in this case R is a 3D matrix with axis 0 is the time dimension
+                    R = AF.R[:,r[0]:r[-1]+1,c[0]:c[-1]+1]
+                    R = R.reshape(R.shape[0],-1)
+                    R = R[:,sea_mask]
+                    R_ = R[0,:] * np.eye(len(sea_mask))
+                    for i in range(1,R.shape[0]):
+                        R_=np.dstack((R_,R[i,:] * np.eye(len(sea_mask))))
+                    R = np.transpose(R_,(2,0,1))
+                    
             else:                  
                 R = AF.R
             @staticmethod

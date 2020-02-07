@@ -90,13 +90,25 @@ AF_ssh.B 		= 0.0001 # variance of initial state error
 if type_obs=="mod":
     AF_ssh.R 		= 0.0001 # variance of observation error
 if type_obs=="obs":
-    AF_ssh.R            = 0.001 # variance of observation error (25-36cm, cf. discussion with M.Ballarotta CLS)
+    AF_ssh.Runiq        = False
+    if AF_ssh.Runiq == True:
+        AF_ssh.R        = 0.001 # variance of observation error (25-36cm, cf. discussion with M.Ballarotta CLS)
 
 """  Loading data  """
 VAR_ssh = VAR()
 print('Loading Data...')
 VAR_ssh = Load_data(PR_ssh) 
 print('...Done')
+
+if AF_ssh.Runiq == False:
+    print('Fit R coefficients...')
+    # estimate the coefficients
+    AF_ssh.coeff    = fit_Rvar(VAR_ssh.Obs_train,VAR_ssh.Mod_train,VAR_ssh.timelag_train,2)
+    AF_ssh.R        = np.polyval(AF_ssh.coeff,VAR_ssh.timelag_test)
+    # plot
+    plotFit_Rvar(VAR_ssh.Obs_train,VAR_ssh.Mod_train,VAR_ssh.timelag_train,2,\
+                 workpath+"/boxplot_error_lag.pdf")
+    print('...Done')
 
 			#***************#
 			# Assimilation  #

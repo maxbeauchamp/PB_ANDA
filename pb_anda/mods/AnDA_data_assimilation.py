@@ -25,13 +25,19 @@ def AnDA_data_assimilation(yo, DA):
         values = np.empty([T,n]);
         time = yo.time;
 
+    Runiq = True
+    if len(DA.R.shape)==3:
+        Rbak = DA.R
+        Runiq = False
+
     if (DA.method =='AnEnKF' or DA.method =='AnEnKS'):
         m_xa_part = np.empty([T,DA.N,n]);
         xf_part = np.empty([T,DA.N,n]);
         Pf = np.empty([T,n,n]);
         for k in tqdm(range(0,T)):
+            if Runiq==False:
+                DA.R = Rbak[k,:,:]
             # update step (compute forecasts)       
-            #print k
             if k==0:
                 xf = np.random.multivariate_normal(DA.xb, DA.B, DA.N);
             else:
@@ -86,6 +92,8 @@ def AnDA_data_assimilation(yo, DA):
         weights_tmp = np.zeros(DA.N);
         xf = np.random.multivariate_normal(DA.xb, DA.B, DA.N)
         i_var_obs = np.where(~np.isnan(yo.values[k,:]))[0]
+        if Runiq==False:
+            DA.R = Rbak[k,:,:]
         if (len(i_var_obs)>0):
             # weights
             for i_N in range(0,DA.N):
@@ -107,6 +115,8 @@ def AnDA_data_assimilation(yo, DA):
         x_hat.weights[k,:] = weights_tmp_indic;
         
         for k in tqdm(range(1,T)):
+            if Runiq==False:
+                DA.R = Rbak[k,:,:]
             # update step (compute forecasts) and add small Gaussian noise
             xf, tej = DA.m(x_hat.part[k-1,:,:]) +np.random.multivariate_normal(np.zeros(xf.shape[1]),DA.B/100.0,xf.shape[0]);        
             if (k_count<len(m_xa_traj)):
@@ -144,6 +154,10 @@ def AnDA_data_assimilation(yo, DA):
     else :
         print("Error: choose DA.method between 'AnEnKF', 'AnEnKS', 'AnPF' ")
         quit()
+
+    if Runiq==False:
+        DA.R = Rbak
+
     return x_hat
   
         

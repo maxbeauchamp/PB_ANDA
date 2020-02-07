@@ -148,18 +148,18 @@ for i in range(0,len(AnDA_ssh_1.GT)):
            'Post-AnDA (nadir)','Post-AnDA (swot)','Post-AnDA (nadir+swot)',\
            'VE-DINEOF (nadir)','VE-DINEOF (swot)','VE-DINEOF (nadir+swot)']
     for ivar in range(0,len(var)):
-        resfile = workpath+"/results_AnDA_maps_"+var+'_'+day+".png"
+        resfile = workpath+"/results_AnDA_maps_"+var[ivar]+'_'+day+".png"
         fig, ax = plt.subplots(1,1,figsize=(10,10),
                           subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=0.0)))   
         vmin = -2 ; vmax = 2
         cmap="coolwarm"
-        plot(ax,0,0,lon,lat,eval(var[ivar]),title[ivar],\
+        plot2(ax,lon,lat,eval(var[ivar]),title[ivar],\
              extent=extent_,cmap=cmap,vmin=vmin,vmax=vmax)
         plt.savefig(resfile)       # save the figure
         plt.close()                 # close the figure
 
     # Display individual gradient maps
-    var=['Grad_GT',\
+    var=['Grad_gt',\
          'Grad_OI','Grad_OI','Grad_OI',\
          'Grad_AnDA_nadir','Grad_AnDA_swot','Grad_AnDA_nadirswot',\
          'Grad_Post_AnDA_nadir','Grad_Post_AnDA_swot','Grad_Post_AnDA_nadirswot',\
@@ -170,17 +170,15 @@ for i in range(0,len(AnDA_ssh_1.GT)):
            r"$\nabla_{Post-AnDA}$ (nadir)",r"$\nabla_{Post-AnDA} (swot)$",r"$\nabla_{Post-AnDA} (nadir+swot)$",\
            r"$\nabla_{VE-DINEOF}$ (nadir)",r"$\nabla_{VE-DINEOF} (swot)$",r"$\nabla_{VE-DINEOF} (nadir+swot)$",]
     for ivar in range(0,len(var)):
-        resfile = workpath+"/results_AnDA_grads_"+var+'_'+day+".png"
+        resfile = workpath+"/results_AnDA_grads_"+var[ivar]+'_'+day+".png"
         fig, ax = plt.subplots(1,1,figsize=(10,10),
                           subplot_kw=dict(projection=ccrs.PlateCarree(central_longitude=0.0)))
         vmin = 0 ; vmax = 0.2
         cmap="viridis"
-        plot(ax,0,0,lon,lat,eval(var[ivar]),title[ivar],\
+        plot2(ax,lon,lat,eval(var[ivar]),title[ivar],\
              extent=extent_,cmap=cmap,vmin=vmin,vmax=vmax)
         plt.savefig(resfile)       # save the figure
         plt.close()                 # close the figure
-
-        
 
     # Display maps
     var=['obs_nadir','obs_swot','obs_nadirswot',\
@@ -288,40 +286,37 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     f_ref, Pf_GT    			= raPsd2dv1(gt,resssh,True)
     f0, Pf_OI 		 		= raPsd2dv1(OI,resssh,True)
     f1_nadir, Pf_AnDA_nadir  		= raPsd2dv1(AnDA_nadir,resssh,True)
-    f1_swot, Pf_AnDA_swot  		= raPsd2dv1(AnDA_swot,resssh,True)
-    f1_nadirswot, Pf_AnDA_nadirswot  	= raPsd2dv1(AnDA_nadirswot,resssh,True)
-    f1_nadir, Pf_AnDA_nadir  		= raPsd2dv1(AnDA_nadir,resssh,True)
-    f1_swot, Pf_AnDA_swot  		= raPsd2dv1(AnDA_swot,resssh,True)
+    #f1_swot, Pf_AnDA_swot  		= raPsd2dv1(AnDA_swot,resssh,True)
     f1_nadirswot, Pf_AnDA_nadirswot  	= raPsd2dv1(AnDA_nadirswot,resssh,True)
     f2_nadir, Pf_postAnDA_nadir 	= raPsd2dv1(Post_AnDA_nadir,resssh,True)
-    f2_swot, Pf_postAnDA_swot 		= raPsd2dv1(Post_AnDA_swot,resssh,True)
+    #f2_swot, Pf_postAnDA_swot 		= raPsd2dv1(Post_AnDA_swot,resssh,True)
     f2_nadirswot, Pf_postAnDA_nadirswot = raPsd2dv1(Post_AnDA_nadirswot,resssh,True)
     f3_nadir, Pf_VE_DINEOF_nadir   	= raPsd2dv1(VE_DINEOF_nadir,resssh,True)
-    f3_swot, Pf_VE_DINEOF_swot  	= raPsd2dv1(VE_DINEOF_swot,resssh,True)
+    #f3_swot, Pf_VE_DINEOF_swot  	= raPsd2dv1(VE_DINEOF_swot,resssh,True)
     f3_nadirswot,Pf_VE_DINEOF_nadirswot = raPsd2dv1(VE_DINEOF_nadirswot,resssh,True)
     wf_ref	        = 1/f_ref
     wf0	        	= 1/f0
     wf1_nadir        	= 1/f1_nadir
-    wf1_swot        	= 1/f1_swot
+    #wf1_swot        	= 1/f1_swot
     wf1_nadirswot       = 1/f1_nadirswot
     wf2_nadir         	= 1/f2_nadir
-    wf2_swot         	= 1/f2_swot
+    #wf2_swot         	= 1/f2_swot
     wf2_nadirswot       = 1/f2_nadirswot
     wf3_nadir         	= 1/f3_nadir
-    wf3_swot         	= 1/f3_swot
+    #wf3_swot         	= 1/f3_swot
     wf3_nadirswot       = 1/f3_nadirswot
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(wf_ref[1:],Pf_GT[1:],label='GT')
     ax.plot(wf0[1:],Pf_OI[1:],'y-',linewidth=.5,label='OI,')
     ax.plot(wf1_nadir[1:],Pf_AnDA_nadir[1:],'r-',linewidth=.5,label='AnDA (nadir)')
-    ax.plot(wf1_swot[1:],Pf_AnDA_swot[1:],'g-',linewidth=.5,label='AnDA (swot)')
+    #ax.plot(wf1_swot[1:],Pf_AnDA_swot[1:],'g-',linewidth=.5,label='AnDA (swot)')
     ax.plot(wf1_nadirswot[1:],Pf_AnDA_nadirswot[1:],'b-',linewidth=.5,label='AnDA (nadir+swot)')
     ax.plot(wf2_nadir[1:],Pf_postAnDA_nadir[1:],'r--',linewidth=.5,label='post-AnDA (nadir)')
-    ax.plot(wf2_swot[1:],Pf_postAnDA_swot[1:],'g--',linewidth=.5,label='post-AnDA (swot)')
+    #ax.plot(wf2_swot[1:],Pf_postAnDA_swot[1:],'g--',linewidth=.5,label='post-AnDA (swot)')
     ax.plot(wf2_nadirswot[1:],Pf_postAnDA_nadirswot[1:],'b--',linewidth=.5,label='post-AnDA (nadir+swot)')
     ax.plot(wf3_nadir[1:],Pf_VE_DINEOF_nadir[1:],'rD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
-    ax.plot(wf3_swot[1:],Pf_VE_DINEOF_swot[1:],'gD-',linewidth=.5,markerSize=2,label='VE-DINEOF(swot)')
+    #ax.plot(wf3_swot[1:],Pf_VE_DINEOF_swot[1:],'gD-',linewidth=.5,markerSize=2,label='VE-DINEOF(swot)')
     ax.plot(wf3_nadirswot[1:],Pf_VE_DINEOF_nadirswot[1:],'bD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
     ax.set_xlabel("Wavenumber", fontweight='bold')
     ax.set_ylabel("Power spectral density (m2/(cy/km))", fontweight='bold')
@@ -331,7 +326,54 @@ for i in range(0,len(AnDA_ssh_1.GT)):
     ax.invert_xaxis()
     plt.grid(which='both', linestyle='--')
     plt.savefig(resfile)        # save the figure
-    plt.close()         	# close the figure
+    plt.close()         	# close the figure 
+
+## Plot averaged RAPS
+resfile=workpath+"/results_AnDA_avg_RAPS.png"
+f_ref, Pf_GT= avg_raPsd2dv1(AnDA_ssh_1.GT,resssh,True)
+f0, Pf_OI   = avg_raPsd2dv1(AnDA_ssh_1.itrp_OI,resssh,True)
+f1_nadir, Pf_AnDA_nadir = avg_raPsd2dv1(AnDA_ssh_1_nadir.itrp_AnDA,resssh,True)
+#f1_swot, Pf_AnDA_swot  = avg_raPsd2dv1(AnDA_ssh_1_swot.itrp_AnDA,resssh,True)
+f1_nadirswot, Pf_AnDA_nadirswot = avg_raPsd2dv1(AnDA_ssh_1_nadirswot.itrp_AnDA,resssh,True)
+f2_nadir, Pf_postAnDA_nadir = avg_raPsd2dv1(AnDA_ssh_1_nadir.itrp_postAnDA,resssh,True)
+#f2_swot, Pf_postAnDA_swot  = avg_raPsd2dv1(AnDA_ssh_1_swot.itrp_postAnDA,resssh,True)
+f2_nadirswot, Pf_postAnDA_nadirswot = avg_raPsd2dv1(AnDA_ssh_1_nadirswot.itrp_postAnDA,resssh,True)
+f3_nadir, Pf_VE_DINEOF_nadir= avg_raPsd2dv1(itrp_dineof_nadir,resssh,True)
+#f3_swot, Pf_VE_DINEOF_swot = avg_raPsd2dv1(itrp_dineof_swot,resssh,True)
+f3_nadirswot,Pf_VE_DINEOF_nadirswot = avg_raPsd2dv1(itrp_dineof_nadirswot,resssh,True)
+wf_ref  = 1/f_ref
+wf0 = 1/f0
+wf1_nadir   = 1/f1_nadir
+#wf1_swot   = 1/f1_swot
+wf1_nadirswot   = 1/f1_nadirswot
+wf2_nadir   = 1/f2_nadir
+#wf2_swot   = 1/f2_swot
+wf2_nadirswot   = 1/f2_nadirswot
+wf3_nadir   = 1/f3_nadir
+#wf3_swot   = 1/f3_swot
+wf3_nadirswot   = 1/f3_nadirswot
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(wf_ref[1:],Pf_GT[1:],label='GT')
+ax.plot(wf0[1:],Pf_OI[1:],'y-',linewidth=.5,label='OI,')
+ax.plot(wf1_nadir[1:],Pf_AnDA_nadir[1:],'r-',linewidth=.5,label='AnDA (nadir)')
+#ax.plot(wf1_swot[1:],Pf_AnDA_swot[1:],'g-',linewidth=.5,label='AnDA (swot)')
+ax.plot(wf1_nadirswot[1:],Pf_AnDA_nadirswot[1:],'b-',linewidth=.5,label='AnDA (nadir+swot)')
+ax.plot(wf2_nadir[1:],Pf_postAnDA_nadir[1:],'r--',linewidth=.5,label='post-AnDA (nadir)')
+#ax.plot(wf2_swot[1:],Pf_postAnDA_swot[1:],'g--',linewidth=.5,label='post-AnDA (swot)')
+ax.plot(wf2_nadirswot[1:],Pf_postAnDA_nadirswot[1:],'b--',linewidth=.5,label='post-AnDA (nadir+swot)')
+ax.plot(wf3_nadir[1:],Pf_VE_DINEOF_nadir[1:],'rD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
+#ax.plot(wf3_swot[1:],Pf_VE_DINEOF_swot[1:],'gD-',linewidth=.5,markerSize=2,label='VE-DINEOF(swot)')
+ax.plot(wf3_nadirswot[1:],Pf_VE_DINEOF_nadirswot[1:],'bD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
+ax.set_xlabel("Wavenumber", fontweight='bold')
+ax.set_ylabel("Power spectral density (m2/(cy/km))", fontweight='bold')
+ax.set_xscale('log') ; ax.set_yscale('log')
+plt.legend(loc='best',prop=dict(size='small'),frameon=False)
+plt.xticks([50, 100, 200, 500, 1000], ["50km", "100km", "200km", "500km", "1000km"])
+ax.invert_xaxis()
+plt.grid(which='both', linestyle='--')
+plt.savefig(resfile)# save the figure
+plt.close() # close the figure
 
 ## Plot time series
 N = len(lday)
@@ -340,8 +382,8 @@ print(N)
 plt.plot(range(N),nrmse_OI,'k-',linewidth=3,label='OI')
 plt.plot(range(N),nrmse_Post_AnDA_nadir,'r-',linewidth=.5,label='post-AnDA (nadir)')
 plt.plot(range(N),nrmse_VE_DINEOF_nadir,'rD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir)')
-plt.plot(range(N),nrmse_Post_AnDA_swot,'g-',linewidth=.5,label='post-AnDA (swot)')
-plt.plot(range(N),nrmse_VE_DINEOF_swot,'gD-',linewidth=.5,markerSize=2,label='VE-DINEOF (swot)')
+#plt.plot(range(N),nrmse_Post_AnDA_swot,'g-',linewidth=.5,label='post-AnDA (swot)')
+#plt.plot(range(N),nrmse_VE_DINEOF_swot,'gD-',linewidth=.5,markerSize=2,label='VE-DINEOF (swot)')
 plt.plot(range(N),nrmse_Post_AnDA_nadirswot,'b-',linewidth=.5,label='post-AnDA (nadir+swot)')
 plt.plot(range(N),nrmse_VE_DINEOF_nadirswot,'bD-',linewidth=.5,markerSize=2,label='VE-DINEOF (nadir+swot)')
 # add vertical bar to divide the 4 periods
