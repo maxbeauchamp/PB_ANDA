@@ -34,14 +34,19 @@ def AnDA_data_assimilation(yo, DA):
         m_xa_part = np.empty([T,DA.N,n]);
         xf_part = np.empty([T,DA.N,n]);
         Pf = np.empty([T,n,n]);
+        Pa = np.empty([T,n,n]);
         for k in tqdm(range(0,T)):
             if Runiq==False:
                 DA.R = Rbak[k,:,:]
             # update step (compute forecasts)       
             if k==0:
                 xf = np.random.multivariate_normal(DA.xb, DA.B, DA.N);
+                Pa_km1 = DA.B 
             else:
-                xf, m_xa_part_tmp = DA.m(x_hat.part[k-1,:,:],k);
+                # DA.m is the analog operator AnDA_AF(x, P, in_x, AF)
+                xa_km1 = x_hat.part[k-1,:,:]
+                Pa_km1 = Pa[k-1,:,:]
+                xf, m_xa_part_tmp = DA.m(xa_km1,Pa_km1,k);
                 m_xa_part[k,:,:] = m_xa_part_tmp;  
             #start_time = time.time()
             xf_part[k,:,:] = xf;
@@ -61,9 +66,11 @@ def AnDA_data_assimilation(yo, DA):
                 yf = np.dot(DA.H[i_var_obs,:],xf.T); yf = yf.T                
                 K = np.dot(np.dot(Pf[k,:,:],DA.H[i_var_obs,:].T),K_part);                   
                 d = np.repeat(yo.values[k,i_var_obs][np.newaxis],DA.N,0)+eps-yf;
-                x_hat.part[k,:,:] = xf + np.dot(d,K.T);          
+                x_hat.part[k,:,:] = xf + np.dot(d,K.T);         
             else:
                 x_hat.part[k,:,:] = xf;            
+            Ea        = np.dot(x_hat.part[k,:,:].T,np.eye(DA.N)-np.ones([DA.N,DA.N])/DA.N);
+            Pa[k,:,:] = np.dot(Ea,Ea.T)/(DA.N-1)
             x_hat.weights[k,:] = np.repeat(1.0/DA.N,DA.N);
             x_hat.values[k,:] = np.sum(x_hat.part[k,:,:]*np.repeat(x_hat.weights[k,:][np.newaxis],n,0).T,0);
             #print("---result  %s seconds ---" % (time.time() - start_time))
@@ -75,7 +82,7 @@ def AnDA_data_assimilation(yo, DA):
                     x_hat.part[k,:,:] = x_hat.part[T-1,:,:];
                 else:
                     m_xa_part_tmp = m_xa_part[k+1,:,:];
-                    tej, m_xa_tmp = DA.m(np.mean(x_hat.part[k,:,:],0)[np.newaxis],k+1);
+                    tej, m_xa_tmp = DA.m(np.mean(x_hat.part[k,:,:],0)[np.newaxis],Pa[k,:,:],k+1);
                     tmp_1 =(x_hat.part[k,:,:]-np.repeat(np.mean(x_hat.part[k,:,:],0)[np.newaxis],DA.N,0)).T;
                     tmp_2 = m_xa_part_tmp-np.repeat(m_xa_tmp,DA.N,0);                    
                     Ks = 1.0/(DA.N-1)*np.dot(np.dot(tmp_1,tmp_2),inv_using_SVD(Pf[k+1,:,:],0.9999));                    

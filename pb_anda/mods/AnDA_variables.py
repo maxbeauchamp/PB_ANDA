@@ -74,7 +74,9 @@ class General_AF:
         self.sampling = AF.sampling
         self.list_kdtree = AF.list_kdtree
         self.B = AF.B
+        self.Runiq = AF.Runiq
         self.R = AF.R
+        self.coeff = AF.coeff
         self.check_indices = AF.check_indices
         self.x_cond = AF.x_cond
         self.x_model = AF.x_model

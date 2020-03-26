@@ -11,8 +11,11 @@ import numpy as np
 from .AnDA_stat_functions import mk_stochastic, sample_discrete, AnDA_RMSE, AnDA_correlate
 from scipy.sparse import diags
 from sklearn.cluster import KMeans
+from statsmodels.stats.correlation_tools import cov_nearest as cov_nn
+def is_pos_def(x):
+    return np.all(np.linalg.eigvals(x) > 0)
 
-def AnDA_analog_forecasting(x, in_x, AF):
+def AnDA_analog_forecasting(x, P, in_x, AF):
     """ Apply the analog method on catalog of historical data to generate forecasts. """
 
     # initializations
@@ -197,20 +200,55 @@ def AnDA_analog_forecasting(x, in_x, AF):
                         tmp4 = np.linalg.lstsq(Aw,Bw)[0]
                         tmp5 = np.linalg.lstsq(A,successors_tmp)[0]
                         mu = np.dot(np.hstack((1,x[i_N,i_var_neighboor])),tmp4)
-                        #mu = np.dot(np.hstack((1,x[i_N,i_var])),tmp4)
-                        #xf_mean[i_N,i_var] = mu
                         res = (successors_tmp- np.dot( A ,tmp5))                                                   
                         xf_tmp[:,i_var] = mu+res
                         # weighted mean and covariance
                         xf_mean[i_N,i_var] = mu
-        
                     res = res.T
                     if len(i_var)>1:
                         cov_xf = np.cov(res)
                     else:
                         cov_xf = np.cov(res)[np.newaxis][np.newaxis]
                     # constant weights for local linear
-                    weights[i_N,:] = 1.0/len(weights[i_N,:])   
+                    weights[i_N,:] = 1.0/len(weights[i_N,:])
+
+                elif (AF.regression == 'optimal_interpolation'):
+                    if (AF.flag_model):
+                        print('Not implemented yet')                    
+                    else:
+                        successors_tmp = successors[index_knn[i_N,:],:]
+                        analogs_tmp    = analogs[index_knn[i_N,:],:]
+                        # ST covariance 
+                        m_analogs      = np.mean(analogs_tmp,axis=0)
+                        m_successors   = np.mean(successors_tmp,axis=0) 
+                        successors_tmp = (successors_tmp - (m_successors*np.ones((AF.k,n))))/(np.sqrt(AF.k))
+                        analogs_tmp    = (analogs_tmp - (m_analogs*np.ones((AF.k,n))))/(np.sqrt(AF.k))
+                        #Sigma_k_kp1   = np.dot(weights[i_N,:]*analogs_tmp.T,successors_tmp)
+                        #Sigma_kp1_k   = np.dot(weights[i_N,:]*successors_tmp.T,analogs_tmp)
+                        #Sigma_kp1_kp1 = np.dot(weights[i_N,:]*successors_tmp.T,successors_tmp)
+                        #Sigma_k_kp1   = np.dot(analogs_tmp.T,successors_tmp)
+                        #Sigma_kp1_k   = np.dot(successors_tmp.T,analogs_tmp)
+                        #Sigma_kp1_kp1 = np.dot(successors_tmp.T,successors_tmp)
+                        #Sigma_k_kp1    = cov_nn(analogs_tmp,successors_tmp)
+                        #Sigma_kp1_k    = cov_nn(successors_tmp,analogs_tmp)
+                        Sigma_k_kp1    = np.dot(analogs_tmp.T,analogs_tmp)
+                        Sigma_k_kp1    = (1./2.)*(Sigma_k_kp1 + Sigma_k_kp1.T)
+                        Sigma_kp1_k    = np.dot(successors_tmp.T,successors_tmp)
+                        Sigma_kp1_k    = (1./2.)*(Sigma_kp1_k + Sigma_kp1_k.T)
+                        Sigma_kp1_kp1  = np.dot(successors_tmp.T,successors_tmp)
+                        Sigma_kp1_kp1  = (1./2.)*(Sigma_kp1_kp1 + Sigma_kp1_kp1.T)
+                        print("Is Sigma_k_kp1 pdf "+str(is_pos_def(Sigma_k_kp1)))
+                        print("Is Sigma_kp1_k pdf "+str(is_pos_def(Sigma_kp1_k)))
+                        print("Is Sigma_kp1_kp1 pdf "+str(is_pos_def(Sigma_kp1_kp1)))
+                        # error matrix from previous timestep
+                        Pa_k     = P
+                        inv_Pa_k = np.linalg.inv(Pa_k)
+                        # Optimal Interpolation
+                        xf_mean[i_N,i_var] = np.dot(np.dot(Sigma_k_kp1,inv_Pa_k),x[i_N,:])
+                        print(xf_mean[i_N,:])
+                        #cov_xf = Sigma_kp1_kp1 - np.dot(np.dot(Sigma_k_kp1,inv_Pa_k),Sigma_kp1_k)
+                        cov_xf = Sigma_kp1_kp1
+                        print("Is cov_xf pdf "+str(is_pos_def(cov_xf)))
                 else:
                     print("Error: choose AF.regression between 'locally_constant', 'increment', 'local_linear' ")
                     quit() 

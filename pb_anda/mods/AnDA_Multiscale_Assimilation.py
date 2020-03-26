@@ -147,7 +147,7 @@ class Multiscale_Assimilation:
             B = AF.B * np.eye(AF.coeff_dX.shape[1])
             H = AF.coeff_dX
             if (self.PR.flag_scale):
-                if AF.Runiq == True:
+                if AF.Runiq==True:
                     # R unique (same value along the R diagonal)
                     R = AF.R * np.eye(len(sea_mask)) 
                 else:
@@ -164,8 +164,8 @@ class Multiscale_Assimilation:
             else:                  
                 R = AF.R
             @staticmethod
-            def m(x,in_x): # x: query point at time t, in_x: index of condition at time t+lag
-                return AnDA_AF(x, in_x, AF)        
+            def m(x, P, in_x): # x: query point at time t, in_x: index of condition at time t+lag
+                return AnDA_AF(x, P, in_x, AF)        
         # AnDA results
         dX_interpolated = np.nan*np.zeros([len(yo.values),self.PR.patch_r, self.PR.patch_c]) 
         x_hat = AnDA_data_assimilation(yo, DA)

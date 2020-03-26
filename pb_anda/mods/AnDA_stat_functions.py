@@ -356,6 +356,32 @@ def avg_raPsd2dv1(img3d,res,hanning):
             Pf= np.vstack((Pf,Pf_))
     Pf = np.mean(Pf,axis=0)
     return f_, Pf
+
+def avg_err_raPsd2dv1(img3d,img3dref,res,hanning):
+    """ Computes and plots radially averaged power spectral density error mean (power
+     spectrum) of an image set img3d along the first dimension.
+    """
+    N = img3d.shape[0]
+    for i in range(N):
+        img1 = img3d[i,:,:]
+        img2 = img3dref[i,:,:]
+        f_, Pf_ = raPsd2dv1(img1-img2,res,hanning)
+        Pf_     = 1-(Pf_/raPsd2dv1(img2,res,hanning)[1])
+        if i==0:
+            f, Pf = f_, Pf_
+        else:
+            f = np.vstack((f,f_))
+            Pf= np.vstack((Pf,Pf_))
+    Pf = np.mean(Pf,axis=0)
+    return f_, Pf
+
+def err_raPsd2dv1(img,imgref,res,hanning):
+    """ Computes and plots radially averaged power spectral density error (power
+     spectrum).
+    """
+    f_, Pf_ = raPsd2dv1(img-imgref,res,hanning)
+    Pf_     = 1-(Pf_/raPsd2dv1(imgref,res,hanning)[1])
+    return f_, Pf_
     
 def raPsd2dv1(img,res,hanning):
     """ Computes and plots radially averaged power spectral density (power

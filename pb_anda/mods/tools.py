@@ -4,7 +4,7 @@ import cartopy.feature as cfeature
 from cartopy.io import shapereader
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-def plot(ax,i,j,lon,lat,data,title,extent=[-65,-55,30,40],cmap="coolwarm",gridded=True,vmin=-2,vmax=2):
+def plot(ax,i,j,lon,lat,data,title,extent=[-65,-55,30,40],cmap="coolwarm",gridded=True,vmin=-2,vmax=2,colorbar=True,orientation="horizontal"):
     ax[i][j].set_extent(list(extent))
     if gridded:
         im=ax[i][j].pcolormesh(lon, lat, data, cmap=cmap,\
@@ -15,7 +15,8 @@ def plot(ax,i,j,lon,lat,data,title,extent=[-65,-55,30,40],cmap="coolwarm",gridde
                        vmin=vmin, vmax=vmax,edgecolors='face', alpha=1, \
                        transform= ccrs.PlateCarree(central_longitude=0.0)) 
     im.set_clim(vmin,vmax)
-    clb = plt.colorbar(im, orientation="horizontal", extend='both', pad=0.1, ax=ax[i][j])
+    if colorbar==True:
+        clb = plt.colorbar(im, orientation=orientation, extend='both', pad=0.1, ax=ax[i][j])
     ax[i][j].set_title(title, pad=40, fontsize = 15)
     gl = ax[i][j].gridlines(alpha=0.5,draw_labels=True)
     gl.xformatter = LONGITUDE_FORMATTER

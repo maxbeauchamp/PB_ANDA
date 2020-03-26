@@ -54,11 +54,11 @@ PR_ssh.G_PCA         = 20	# N_eof for global PCA
 PR_ssh.var		= "ssh_"+type_obs  # Variable to assimilate
 # Directory of ssh data
 if opt=="nadir":
-    PR_ssh.path_X	= datapath+'/data/dataset_nadir_'+lag+'d.nc'
+    PR_ssh.path_X	= datapath+'/data/gridded_data_swot_wocorr/dataset_nadir_'+lag+'d.nc'
 elif opt=="swot":
-    PR_ssh.path_X       = datapath+'/data/dataset_swot.nc'   	
+    PR_ssh.path_X       = datapath+'/data/gridded_data_swot_wocorr/dataset_swot.nc'   	
 else:
-    PR_ssh.path_X       = datapath+'/data/dataset_nadir_'+lag+'d_swot.nc'
+    PR_ssh.path_X       = datapath+'/data/gridded_data_swot_wocorr/dataset_nadir_'+lag+'d_swot.nc'
 PR_ssh.path_mod 	= datapath+'/maps/NATL60-CJM165_ssh_y2013.1y.nc' # Directory of ssh NATL60 maps
 PR_ssh.path_OI 		= datapath+'/oi/ssh_NATL60_4nadir.nc'	 # Directory of OI product 
 
@@ -83,12 +83,14 @@ AF_ssh.cluster 		= 1     # clusterized version AF
 AF_ssh.k 		= 200 	# number of analogs
 AF_ssh.k_initial 	= 200 	# retrieving k_initial nearest neighbors, then using condition to retrieve k analogs 
 AF_ssh.neighborhood 	= np.ones([PR_ssh.n,PR_ssh.n]) # global analogs
-AF_ssh.regression 	= 'local_linear' # forecasting strategies select among:\
+#AF_ssh.regression 	= 'local_linear' # forecasting strategies select among:\
 					 # locally_constant, increment, local_linear
+AF_ssh.regression       = 'optimal_interpolation'
 AF_ssh.sampling 	= 'gaussian' 
 AF_ssh.B 		= 0.0001 # variance of initial state error
 if type_obs=="mod":
     AF_ssh.R 		= 0.0001 # variance of observation error
+    AF_ssh.Runiq        = True
 if type_obs=="obs":
     AF_ssh.Runiq        = False
     if AF_ssh.Runiq == True:
@@ -101,7 +103,8 @@ VAR_ssh = Load_data(PR_ssh)
 print('...Done')
 
 if AF_ssh.Runiq == False:
-    print('Fit R coefficients...')
+    ## *** Fit nadir variance *** ##
+    print('Fit nadir error variance coefficients...')
     # estimate the coefficients
     AF_ssh.coeff    = fit_Rvar(VAR_ssh.Obs_train,VAR_ssh.Mod_train,VAR_ssh.timelag_train,2)
     AF_ssh.R        = np.polyval(AF_ssh.coeff,VAR_ssh.timelag_test)

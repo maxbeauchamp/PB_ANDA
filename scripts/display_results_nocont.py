@@ -18,7 +18,6 @@ def mk_dir_recursive(dir_path):
     h, t = os.path.split(dir_path)  # head/tail
     if not os.path.isdir(h):
         mk_dir_recursive(h)
-
     new_path = join_paths(h, t)
     if not os.path.isdir(new_path):
         os.mkdir(new_path)
