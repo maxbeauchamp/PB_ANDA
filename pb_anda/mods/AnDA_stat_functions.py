@@ -195,7 +195,7 @@ def Taylor_diag(series,names,styles,colors):
         ax.plot(np.arccos(corr[i]), std[i],c=colors[i],alpha=0.7,marker=styles[i],label="%s" %names[i])
         #ax.text(np.arccos(corr[i]), std[i],"%s"%i)
     # inset axes....
-    axins = ax.inset_axes([1.1, 0, 0.3, 0.3])
+    '''axins = ax.inset_axes([1.1, 0, 0.3, 0.3])
     def pol2cart(phi, rho):
         x = rho * np.cos(phi)
         y = rho * np.sin(phi)
@@ -214,7 +214,7 @@ def Taylor_diag(series,names,styles,colors):
     axins.set_xticks([])
     axins.set_yticks([])
     axins.set_xticklabels('')
-    axins.set_yticklabels('')
+    axins.set_yticklabels('')'''
     plt.legend(bbox_to_anchor=(1.5, 1),prop=dict(size='small'),loc='best')
 
 def AnDA_stdev(a):
@@ -366,7 +366,7 @@ def avg_err_raPsd2dv1(img3d,img3dref,res,hanning):
         img1 = img3d[i,:,:]
         img2 = img3dref[i,:,:]
         f_, Pf_ = raPsd2dv1(img1-img2,res,hanning)
-        Pf_     = 1-(Pf_/raPsd2dv1(img2,res,hanning)[1])
+        Pf_     = (Pf_/raPsd2dv1(img2,res,hanning)[1])
         if i==0:
             f, Pf = f_, Pf_
         else:
@@ -380,14 +380,13 @@ def err_raPsd2dv1(img,imgref,res,hanning):
      spectrum).
     """
     f_, Pf_ = raPsd2dv1(img-imgref,res,hanning)
-    Pf_     = 1-(Pf_/raPsd2dv1(imgref,res,hanning)[1])
+    Pf_     = (Pf_/raPsd2dv1(imgref,res,hanning)[1])
     return f_, Pf_
     
 def raPsd2dv1(img,res,hanning):
     """ Computes and plots radially averaged power spectral density (power
      spectrum) of image IMG with spatial resolution RES.
     """
-    
     img = img.copy()
     N, M = img.shape
     if hanning:
@@ -421,5 +420,32 @@ def raPsd2dv1(img,res,hanning):
     f1 = f1/res
     return f1, Pf
 
-
- 
+def build_LR(HR,GT,pct_var_init=.6,HPF=150):
+# HR: the T*2D map
+# GT: the T*2D ground truth map
+# pct_var_init: pct of variance explained by PCA
+# HPF: value (in km) to satisfy spectral value=0
+    stop = False
+    pct_var = pct_var_init
+    while not stop:
+        # compute LR with N_eof
+        lr = np.copy(HR).reshape(HR.shape[0],-1)
+        tmp = lr[0,:]
+        sea_v2 = np.where(~np.isnan(tmp))[0]
+        lr_no_land = lr[:,sea_v2]
+        pca = PCA(n_components=pct_var_init)
+        score_global = pca.fit_transform(lr_no_land)
+        coeff_global = pca.components_.T
+        mu_global = pca.mean_
+        DataReconstructed_global = np.dot(score_global, coeff_global.T) +mu_global
+        lr[:,sea_v2] = DataReconstructed_global
+        lr = lr.reshape(HR.shape)
+        # test if HPF is satisfied
+        resssh=4
+        f, Pf = avg_err_raPsd2dv1(lr,GT,resssh,True)
+        index = ((1./f)-HPF).argmin()
+        if np.abs(Pf[index]-1.)<1e-2:
+            stop=True
+        else:
+            pct_var=pct_var+0.05
+    return lr

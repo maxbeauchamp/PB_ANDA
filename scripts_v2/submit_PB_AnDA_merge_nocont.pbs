@@ -1,0 +1,27 @@
+##PBS -q sequentiel
+##PBS -l ncpus=1
+##PBS -l mem=32gb
+#PBS -q omp 
+#PBS -l ncpus=20
+#PBS -l mem=110gb
+#PBS -l walltime=01:00:00
+#PBS -e /home3/datahome/mbeaucha/algo/error_AnDA.txt
+#PBS -o /home3/datahome/mbeaucha/algo/output_AnDA.txt
+
+HOMEDIR=/home3/datahome/mbeaucha
+
+rm -rf ${HOMEDIR}/PB_ANDA/scripts_v2/log_AnDA_${OPT}_${LAG}_${TYPE_OBS}.txt
+
+module load GDal/2.2.2-intel-cc-17.0.2.174
+module load NETCDF-test/4.3.3.1-mpt217-intel2018
+module load conda/latest
+module load R/3.4.3-intel-17.0.2.174
+module load cdo/1.8.0__gcc-6.3.0
+module load nco/4.7.1_conda
+module load ncview/2.1.7__gcc-6.3.0
+module unload intel-cmkl-17/17.0.2.174
+
+source activate /home3/datahome/mbeaucha/.conda/envs/mbeaucha
+export PYTHONPATH=/home3/datahome/mbeaucha/NATL60:/home3/datahome/mbeaucha/PB_ANDA:${PYTHONPATH}
+
+python3 -u ${HOMEDIR}/PB_ANDA/scripts_v2/launch_4periods_ANDA.py ${OPT} ${LAG} ${TYPE_OBS} > ${HOMEDIR}/PB_ANDA/scripts_v2/log_AnDA_${OPT}_${LAG}_${TYPE_OBS}.txt
