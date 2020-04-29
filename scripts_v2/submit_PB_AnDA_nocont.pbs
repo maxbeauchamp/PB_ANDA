@@ -5,8 +5,8 @@
 #PBS -l ncpus=20
 #PBS -l mem=110gb
 #PBS -l walltime=00:30:00
-#PBS -e /home3/datahome/mbeaucha/algo/error_AnDA.txt
-#PBS -o /home3/datahome/mbeaucha/algo/output1_AnDA.txt
+#PBS -e /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/error_AnDA.txt
+#PBS -o /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/output1_AnDA.txt
 
 HOMEDIR=/home3/datahome/mbeaucha
 
@@ -24,4 +24,4 @@ module unload intel-cmkl-17/17.0.2.174
 source activate /home3/datahome/mbeaucha/.conda/envs/mbeaucha
 export PYTHONPATH=/home3/datahome/mbeaucha/NATL60:/home3/datahome/mbeaucha/PB_ANDA:${PYTHONPATH}
 
-python3 -u ${HOMEDIR}/PB_ANDA/scripts_v2/script_AnDA_SSH_nocont.py ${OPT} ${LAG} ${TYPE_OBS} ${START} > ${HOMEDIR}/PB_ANDA/scripts_v2/log_AnDA_${OPT}_${LAG}_${TYPE_OBS}_${START}.txt
+python3 -u ${HOMEDIR}/PB_ANDA/scripts_v2/script_AnDA_SSH_nocont.py ${OPT} ${LAG} ${TYPE_OBS} ${START} ${DOMAIN} > ${HOMEDIR}/PB_ANDA/scripts_v2/log_AnDA_${OPT}_${LAG}_${TYPE_OBS}_${START}_${DOMAIN}.txt

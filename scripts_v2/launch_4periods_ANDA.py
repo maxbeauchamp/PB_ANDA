@@ -25,28 +25,29 @@ def mk_dir_recursive(dir_path):
 opt = sys.argv[1]
 lag = sys.argv[2]
 type_obs = sys.argv[3]
+domain   = sys.argv[4]
 
 # wait for the results
-workpath="/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_60"
+workpath="/home3/scratch/mbeaucha/"+domain+"/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_60"
 saved_path1=workpath+'/saved_path.pickle'
-workpath="/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_140"
+workpath="/home3/scratch/mbeaucha/"+domain+"/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_140"
 saved_path2=workpath+'/saved_path.pickle'
-workpath="/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_220"
+workpath="/home3/scratch/mbeaucha/"+domain+"/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_220"
 saved_path3=workpath+'/saved_path.pickle'
-workpath="/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_300"
+workpath="/home3/scratch/mbeaucha/"+domain+"/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs+"_dstart_300"
 saved_path4=workpath+'/saved_path.pickle'
 
 if  ( not os.path.exists(saved_path1) ):
-    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=60'      /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
+    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=60','DOMAIN="+domain+"'      /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
     os.popen(bashCommand)
 if  ( not os.path.exists(saved_path2) ):
-    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=140'      /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
+    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=140','DOMAIN="+domain+"'       /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
     os.popen(bashCommand)
 if  ( not os.path.exists(saved_path3) ):
-    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=220'      /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
+    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=220','DOMAIN="+domain+"'       /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
     os.popen(bashCommand)
 if  ( not os.path.exists(saved_path4) ):
-    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=300'      /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
+    bashCommand="qsub -v 'OPT="+opt+"','LAG="+lag+"','TYPE_OBS="+type_obs+"','START=300','DOMAIN="+domain+"'       /home3/datahome/mbeaucha/PB_ANDA/scripts_v2/submit_PB_AnDA_nocont.pbs"
     os.popen(bashCommand)
 
 # wait for the results
@@ -99,7 +100,7 @@ lday4=[ datetime.strftime(datetime.strptime("2012-10-01",'%Y-%m-%d')\
                           + timedelta(days=300+i),"%Y-%m-%d") for i in range(20) ]
 lday = np.concatenate([lday1,lday2,lday3,lday4])
 
-workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs
+workpath = "/home3/scratch/mbeaucha/"+domain+"/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs
 if not os.path.exists(workpath):
     mk_dir_recursive(workpath)
 else:
@@ -119,15 +120,28 @@ with open(saved_path, 'rb') as handle:
 			# Display results #
 			#*****************#
 
-resssh = 0.25
+resssh = 4
 r_start = 0
 c_start = 0
-r_length = 10*20
-c_length = 10*20
-lon = np.arange(-65,-65+((1/20)*r_length),1/20)
-lat = np.arange(30,30+((1/20)*c_length),1/20)
+if domain=="OSMOSIS":
+    r_length = 200
+    c_length = 160
+    lon = np.arange(-19.5,-19.5+((1/20)*c_length),1/20)
+    lat = np.arange(45.,45.+((1/20)*r_length),1/20)
+elif domain=='GULFSTREAM':
+    r_length = 200
+    c_length = 200
+    lon = np.arange(-65.,-65.+((1/20)*c_length),1/20)
+    lat = np.arange(33.,33.+((1/20)*r_length),1/20)
+else:
+    r_length = 200
+    c_length = 200
+    lon = np.arange(-65.,-65.+((1/20)*c_length),1/20)
+    lat = np.arange(30.,30.+((1/20)*r_length),1/20)
 extent_=[np.min(lon),np.max(lon),np.min(lat),np.max(lat)]
+
 for i in range(80):
+
 
     day=lday[i]
     print(day)

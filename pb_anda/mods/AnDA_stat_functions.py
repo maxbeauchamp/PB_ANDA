@@ -399,15 +399,15 @@ def raPsd2dv1(img,res,hanning):
     dimMax = max(N,M)
     if (N>M):
         if ((dimDiff%2)==0):
-            imgfp = np.pad(imgfp,((0,0),(dimDiff/2,dimDiff/2)),'constant',constant_values=np.nan)
+            imgfp = np.pad(imgfp,((0,0),(int(dimDiff/2),int(dimDiff/2))),'constant',constant_values=np.nan)
         else:
-            imgfp = np.pad(imgfp,((0,0),(dimDiff/2,1+dimDiff/2)),'constant',constant_values=np.nan)
+            imgfp = np.pad(imgfp,((0,0),(int(dimDiff/2),1+int(dimDiff/2))),'constant',constant_values=np.nan)
             
     elif (N<M):
         if ((dimDiff%2)==0):
-            imgfp = np.pad(imgfp,((dimDiff/2,dimDiff/2),(0,0)),'constant',constant_values=np.nan)
+            imgfp = np.pad(imgfp,((int(dimDiff/2),int(dimDiff/2)),(0,0)),'constant',constant_values=np.nan)
         else:
-            imgfp = np.pad(imgfp,((dimDiff/2,1+dimDiff/2),(0,0)),'constant',constant_values=np.nan)
+            imgfp = np.pad(imgfp,((int(dimDiff/2),1+int(dimDiff/2)),(0,0)),'constant',constant_values=np.nan)
     halfDim = int(np.ceil(dimMax/2.))
     X, Y = np.meshgrid(np.arange(-dimMax/2.,dimMax/2.-1+0.00001),np.arange(-dimMax/2.,dimMax/2.-1+0.00001))           
     theta, rho = cart2pol(X, Y)                                              

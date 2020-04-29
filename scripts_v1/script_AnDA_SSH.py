@@ -26,7 +26,9 @@ def mk_dir_recursive(dir_path):
 opt	 = sys.argv[1]
 lag	 = sys.argv[2]
 type_obs = sys.argv[3]
-workpath = "/home3/scratch/mbeaucha/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs
+domain   = sys.argv[4]
+
+workpath = "/home3/scratch/mbeaucha/"+domain+"/resAnDA_"+opt+"_nadlag_"+lag+"_"+type_obs
 if not os.path.exists(workpath):
     mk_dir_recursive(workpath)     
 else:
@@ -53,20 +55,20 @@ PR_ssh.G_PCA         = 20	# N_eof for global PCA
 PR_ssh.var		= "ssh_"+type_obs  # Variable to assimilate
 # Directory of ssh data
 if opt=="nadir":
-    PR_ssh.path_X       = datapath+'/data/gridded_data_swot_wocorr/dataset_nadir_'+lag+'d.nc'
+    PR_ssh.path_X       = datapath+'/'+domain+'/data/gridded_data_swot_wocorr/dataset_nadir_'+lag+'d.nc'
 elif opt=="swot":
-    PR_ssh.path_X       = datapath+'/data/gridded_data_swot_wocorr/dataset_swot.nc'
+    PR_ssh.path_X       = datapath+'/'+domain+'/data/gridded_data_swot_wocorr/dataset_swot.nc'
 else:
-    PR_ssh.path_X       = datapath+'/data/gridded_data_swot_wocorr/dataset_nadir_'+lag+'d_swot.nc'
+    PR_ssh.path_X       = datapath+'/'+domain+'/data/gridded_data_swot_wocorr/dataset_nadir_'+lag+'d_swot.nc'
 # Directory of ssh NATL60 maps
-PR_ssh.path_mod         = datapath+'/maps/NATL60-CJM165_ssh_y2013.1y.nc'
+PR_ssh.path_mod         = datapath+'/'+domain+'/ref/NATL60-CJM165_'+domain+'_ssh_y2013.1y.nc'
 # Directory of OI product
 if opt=="nadir":
-    PR_ssh.path_OI      = datapath+'/oi/ssh_NATL60_4nadir.nc'
+    PR_ssh.path_OI      = datapath+'/'+domain+'/oi/ssh_NATL60_4nadir.nc'
 elif opt=="swot":
-    PR_ssh.path_OI      = datapath+'/oi/ssh_NATL60_swot.nc'
+    PR_ssh.path_OI      = datapath+'/'+domain+'/oi/ssh_NATL60_swot.nc'
 else:
-    PR_ssh.path_OI      = datapath+'/oi/ssh_NATL60_swot_4nadir.nc'
+    PR_ssh.path_OI      = datapath+'/'+domain+'/oi/ssh_NATL60_swot_4nadir.nc'
 
 # Dataset automatically created during execution
 PR_ssh.path_X_lr 		= workpath+'/ssh_lr.nc'
@@ -109,12 +111,23 @@ print('...Done')
 			#***************#
 r_start = 0
 c_start = 0
-r_length = 10*20
-c_length = 10*20
-lon = np.arange(-65,-65+((1/20)*r_length),1/20)
-lat = np.arange(30,30+((1/20)*c_length),1/20)
+if domain=="OSMOSIS":
+    r_length = 200
+    c_length = 160
+    lon = np.arange(-19.5,-19.5+((1/20)*c_length),1/20)
+    lat = np.arange(45.,45.+((1/20)*r_length),1/20)
+elif domain=='GULFSTREAM':
+    r_length = 200
+    c_length = 200
+    lon = np.arange(-65.,-65.+((1/20)*c_length),1/20)
+    lat = np.arange(33.,33.+((1/20)*r_length),1/20)
+else:
+    r_length = 200
+    c_length = 200
+    lon = np.arange(-65.,-65.+((1/20)*c_length),1/20)
+    lat = np.arange(30.,30.+((1/20)*r_length),1/20)
 extent_=[np.min(lon),np.max(lon),np.min(lat),np.max(lat)]
-level = 20 	# 20 patches executed simultaneously
+level = 20      # 20 patches executed simultaneously
 
 saved_path =  workpath+'/saved_path.pickle'
 
